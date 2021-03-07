@@ -6,8 +6,7 @@
         :dist-updater/fetch)
   (:import-from :cl-store)
   (:import-from :yason)
-  (:import-from :mito)
-  (:import-from :dexador))
+  (:import-from :mito))
 (in-package :dist-updater/main)
 
 #+(or)
@@ -96,7 +95,7 @@
   (let ((release-table (make-hash-table)))
     (maphash (lambda (name url)
                (print (cons name url))
-               (let ((yason (yason:parse (dex:get url))))
+               (let ((yason (yason:parse (fetch url))))
                  (setf (gethash name release-table) yason)))
              (fetch-releases))
     (setf *release-table* release-table)))

@@ -1,5 +1,6 @@
 (defpackage :dist-updater/fetch
-  (:use :cl)
+  (:use :cl :alexandria)
+  (:import-from :quri)
   (:import-from :dexador)
   (:import-from :yason)
   (:import-from :cl-store)
@@ -9,10 +10,6 @@
 
 (defparameter *info-json-url* "https://storage.googleapis.com/quickdocs-dist/quicklisp/2021-02-28/info.json")
 (defparameter *releases-json-url* "https://storage.googleapis.com/quickdocs-dist/quicklisp/2021-02-28/releases.json")
-
-(defparameter *fetch-use-cache* t)
-
-(defvar *fetch-cache* (make-hash-table :test 'equal))
 
 (defun parse-json (json)
   (let ((hash-table (yason:parse json))
@@ -24,18 +21,19 @@
              hash-table)
     new-hash-table))
 
+(defun url-to-local-pathname (url)
+  (let* ((path (quri:uri-path (quri:uri url)))
+         (pathname (asdf:system-relative-pathname :dist-updater (pathname (string-left-trim "/" path)))))
+    pathname))
+
 (defun fetch (url)
-  (if *fetch-use-cache*
-      (or (gethash url *fetch-cache*)
-          (setf (gethash url *fetch-cache*)
-                (dex:get url)))
-      (dex:get url)))
-
-(defun save-fetch-cache ()
-  (cl-store:store *fetch-cache* #p"fetch.out"))
-
-(defun load-fetch-store ()
-  (setf *fetch-cache* (cl-store:restore #p"fetch.out")))
+  (let ((data (dex:get url))
+        (pathname (url-to-local-pathname url)))
+    (cond ((uiop:file-exists-p pathname)
+           (read-file-into-string pathname))
+          (t
+           (ensure-directories-exist pathname)
+           (write-string-into-file data pathname :if-exists :supersede)))))
 
 (defun fetch-releases (&optional (url *releases-json-url*))
   (parse-json (fetch url)))
