@@ -21,7 +21,7 @@
   (defun construct-accessor (class-name slot-name)
     (symbolicate class-name '- slot-name)))
 
-(defmacro define-json-db-class (class-name direct-superclasses direct-slots &key abstract)
+(defmacro define-json-db-class (class-name direct-superclasses direct-slots &rest defclass-options &key abstract)
   `(progn
      (pushnew ',class-name *json-db-classes*)
      (setf (get ',class-name 'direct-slots) ',direct-slots)
@@ -34,7 +34,8 @@
                                     :accessor ,(construct-accessor class-name slot-name)
                                     ,@(if (getf options :relational-type)
                                           (list :ghost t))))
-       (:auto-pk :uuid))))
+       (:auto-pk :uuid)
+       ,@(remove-from-plist defclass-options :abstract))))
 
 (defun slot-to-key-name (slot-name)
   (cl-change-case:snake-case (string slot-name)))
