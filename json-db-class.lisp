@@ -21,21 +21,24 @@
   (defun construct-accessor (class-name slot-name)
     (symbolicate class-name '- slot-name)))
 
-(defmacro define-json-db-class (class-name direct-superclasses direct-slots &rest defclass-options &key abstract)
-  `(progn
-     (pushnew ',class-name *json-db-classes*)
-     (setf (get ',class-name 'direct-slots) ',direct-slots)
-     (setf (get ',class-name 'direct-superclasses) ',direct-superclasses)
-     ,@(when abstract
-         `((setf (get ',class-name 'abstract) t)))
-     (mito:deftable ,class-name (,@direct-superclasses)
-       ,(loop :for (slot-name . options) :in direct-slots
-              :collect `(,slot-name ,@options
-                                    :accessor ,(construct-accessor class-name slot-name)
-                                    ,@(if (getf options :relational-type)
-                                          (list :ghost t))))
-       (:auto-pk :uuid)
-       ,@(remove-from-plist defclass-options :abstract))))
+(defmacro define-json-db-class (class-name direct-superclasses direct-slots
+                                &rest defclass-options)
+  (let ((abstract (assoc-value defclass-options :abstract))
+        (defclass-options (remove :abstract defclass-options :key #'first)))
+    `(progn
+       (pushnew ',class-name *json-db-classes*)
+       (setf (get ',class-name 'direct-slots) ',direct-slots)
+       (setf (get ',class-name 'direct-superclasses) ',direct-superclasses)
+       ,@(when abstract
+           `((setf (get ',class-name 'abstract) t)))
+       (mito:deftable ,class-name (,@direct-superclasses)
+         ,(loop :for (slot-name . options) :in direct-slots
+                :collect `(,slot-name ,@options
+                                      :accessor ,(construct-accessor class-name slot-name)
+                                      ,@(if (getf options :relational-type)
+                                            (list :ghost t))))
+         (:auto-pk :uuid)
+         ,@defclass-options))))
 
 (defun slot-to-key-name (slot-name)
   (cl-change-case:snake-case (string slot-name)))

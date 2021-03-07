@@ -74,7 +74,7 @@
    (version :col-type (or :null :text))
    (feature :col-type :text) ; s-expression to string
    )
-  :abstract t)
+  (:abstract t))
 
 (defmethod convert-json-aux :around ((class-name (eql 'abstract-metadata-depends-on)) initargs)
   (destructuring-bind (&key name version feature) initargs
