@@ -107,18 +107,25 @@
 (defun load-all-releases ()
   (setf *release-table* (cl-store:restore #p"releases.out")))
 
+
+;; for debug
+(defvar $release-name)
+(defvar $release-yason)
+(defvar $system-name)
+(defvar $system)
+
 (defun create-releases-db ()
   (ensure-connection)
   (maphash (lambda (name yason)
-             (defparameter $name name)
-             (defparameter $yason yason)
+             (setf $release-name name)
+             (setf $release-yason yason)
              (convert-json 'release yason))
            *release-table*))
 
 (defun create-system-db (systems)
   (maphash (lambda (system-name system)
-             (defparameter $system-name system-name)
-             (defparameter $system system)
+             (setf $system-name system-name)
+             (setf $system system)
              (convert-json 'system system))
            systems))
 
