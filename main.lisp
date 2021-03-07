@@ -4,7 +4,6 @@
         :dist-updater/db
         :dist-updater/json-db-class
         :dist-updater/fetch)
-  (:import-from :cl-store)
   (:import-from :yason)
   (:import-from :mito))
 (in-package :dist-updater/main)
@@ -99,13 +98,6 @@
                  (setf (gethash name release-table) yason)))
              (fetch-releases))
     (setf *release-table* release-table)))
-
-(defun dump-all-releases (*release-table*)
-  (cl-store:store *release-table* #p"releases.out"))
-
-(defun load-all-releases ()
-  (setf *release-table* (cl-store:restore #p"releases.out")))
-
 
 ;; for debug
 (defvar $release-name)
