@@ -3,7 +3,6 @@
   (:import-from :quri)
   (:import-from :dexador)
   (:import-from :yason)
-  (:import-from :cl-store)
   (:export :fetch
            :fetch-releases))
 (in-package :dist-updater/fetch)

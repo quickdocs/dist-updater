@@ -1,6 +1,8 @@
 (defpackage :dist-updater/json-db-class
   (:use :cl
         :alexandria)
+  (:import-from :dist-updater/db
+                :ensure-connection)
   (:import-from :mito)
   (:import-from :cl-change-case)
   (:export :define-json-db-class
@@ -85,6 +87,7 @@
         (json-table-definitions)))
 
 (defun drop-all-json-tables ()
+  (ensure-connection)
   (dolist (name *json-db-classes*)
     (ignore-errors
       (mito:execute-sql
