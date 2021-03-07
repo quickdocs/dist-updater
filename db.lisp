@@ -1,5 +1,7 @@
 (defpackage :dist-updater/db
   (:use :cl)
+  (:import-from :cl-dbi)
+  (:import-from :mito)
   (:export :with-transaction*
            :connect-db
            :ensure-connection))
