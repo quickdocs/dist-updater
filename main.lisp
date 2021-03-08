@@ -49,7 +49,10 @@
    (license :col-type (or :null :text))
    (homepage :col-type (or :null :text))
    (bug-tracker :col-type (or :null :text))
-   (source-control :col-type (or :null :text[]))))
+   (source-control :col-type (or :null :text[]))
+   (defsystem-depends-on :relational-type metadata-defsystem-depends-on :type list)
+   (depends-on :relational-type metadata-depends-on :type list)
+   (weekly-depends-on :relational-type metadata-weekly-depends-on :type list)))
 
 (defun normalize-array (value)
   (coerce (ensure-list (if (and (consp value)
@@ -72,7 +75,7 @@
 (define-json-db-class abstract-metadata-depends-on ()
   ((name :col-type :text)
    (version :col-type (or :null :text))
-   (feature :col-type :text) ; s-expression to string
+   (feature :col-type (or :null :text)) ; s-expression to string
    )
   (:abstract t))
 
