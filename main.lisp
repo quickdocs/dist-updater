@@ -55,10 +55,10 @@
    (weakly-depends-on :relational-type metadata-weakly-depends-on :type list)))
 
 (defun normalize-array (value)
-  (coerce (ensure-list (if (and (consp value)
+  (coerce (ensure-list (if (and (or (consp value) (vectorp value))
                                 (length= value 2)
-                                (equal "quote" (first value)))
-                           (second value)
+                                (equal "quote" (elt value 0)))
+                           (elt value 1)
                            value))
           'vector))
 
@@ -119,16 +119,19 @@
 
 (defun create-system-db (systems)
   (maphash (lambda (system-name system)
-             (format t "~A~%" system-name)
              (setf $system-name system-name)
              (setf $system system)
              (convert-json 'system system))
            systems))
 
 (defun create-all-systems-db ()
-  (dolist (release (mito:select-dao 'release))
-    (let ((url (release-systems-metadata-url release)))
-      (create-system-db (yason:parse (fetch url))))))
+  (loop :with releases := (mito:select-dao 'release)
+        :with all-nums := (length releases)
+        :for release :in releases
+        :for progress :from 0
+        :do (format t "~&~A ~50T ~D/~D~&" (release-project-name release) progress all-nums)
+        :do (let ((url (release-systems-metadata-url release)))
+              (create-system-db (yason:parse (fetch url))))))
 
 (defun main ()
   (ensure-connection)
