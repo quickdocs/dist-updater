@@ -52,7 +52,7 @@
    (source-control :col-type (or :null :text[]))
    (defsystem-depends-on :relational-type metadata-defsystem-depends-on :type list)
    (depends-on :relational-type metadata-depends-on :type list)
-   (weekly-depends-on :relational-type metadata-weekly-depends-on :type list)))
+   (weakly-depends-on :relational-type metadata-weakly-depends-on :type list)))
 
 (defun normalize-array (value)
   (coerce (ensure-list (if (and (consp value)
@@ -90,7 +90,7 @@
 
 (define-json-db-class metadata-defsystem-depends-on (abstract-metadata-depends-on) ())
 (define-json-db-class metadata-depends-on (abstract-metadata-depends-on) ())
-(define-json-db-class metadata-weekly-depends-on (abstract-metadata-depends-on) ())
+(define-json-db-class metadata-weakly-depends-on (abstract-metadata-depends-on) ())
 
 ;;;
 (defvar *release-table* (make-hash-table))
