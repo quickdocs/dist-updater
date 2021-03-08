@@ -10,8 +10,8 @@
 (defmacro with-transaction* ((&key (rollback t)) &body body)
   `(dbi:with-transaction mito:*connection*
      (let ((mito:*mito-logger-stream* *standard-output*))
-       ,@body
-       (when ,rollback (dbi:rollback mito:*connection*)))))
+       (prog1 (progn ,@body)
+         (when ,rollback (dbi:rollback mito:*connection*))))))
 
 (defun connect-db ()
   (mito:connect-toplevel :postgres :database-name "quickdocs"))
