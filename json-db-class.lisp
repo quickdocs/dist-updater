@@ -50,9 +50,9 @@
 (defun slot-to-key-name (slot-name)
   (cl-change-case:snake-case (string slot-name)))
 
-(defgeneric convert-json-aux (class-name initargs))
-(defmethod convert-json-aux (class-name initargs)
-  (apply #'mito:create-dao class-name initargs))
+(defgeneric convert-json-aux (dao))
+(defmethod convert-json-aux (dao)
+  (mito:save-dao dao))
 
 (defun array-col-type-p (col-type)
   (and (keywordp col-type)
@@ -71,7 +71,7 @@
                                 (coerce (gethash (slot-to-key-name slot-name) json) 'vector))
                                (t
                                 (gethash (slot-to-key-name slot-name) json))))))
-    (convert-json-aux class-name initargs)))
+    (convert-json-aux (apply #'make-instance class-name initargs))))
 
 (defun convert-json (class-name json &optional parent-class)
   (let ((dao (convert-json-1 class-name json parent-class)))

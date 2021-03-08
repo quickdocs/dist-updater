@@ -34,7 +34,7 @@
   ((name :col-type :text)
    (system-file-name :col-type :text)
    (required-systems :col-type :text[])
-   (metadata :relational-type system-metadata :type system-metadata)))
+   (metadata :relational-type system-metadata :type (or null system-metadata))))
 
 (define-json-db-class system-metadata ()
   ((system :col-type system)
@@ -62,29 +62,31 @@
                            value))
           'vector))
 
-(defmethod convert-json-aux :around ((class-name (eql 'system-metadata)) initargs)
-  (destructuring-bind (&rest initargs &key author maintainer source-control description &allow-other-keys) initargs
-    (call-next-method
-     class-name
-     (list* :author (normalize-array author)
-            :maintainer (normalize-array maintainer)
-            :source-control (normalize-array source-control)
-            :description (if (consp description) (first description) description)
-            (remove-from-plist initargs :author :maintainer :source-control :description)))))
+(defmethod convert-json-aux :around ((dao system-metadata))
+  (setf (system-metadata-author dao)
+        (normalize-array (system-metadata-author dao)))
+  (setf (system-metadata-maintainer dao)
+        (normalize-array (system-metadata-maintainer dao)))
+  (setf (system-metadata-source-control dao)
+        (normalize-array (system-metadata-source-control dao)))
+  (setf (system-metadata-description dao)
+        (if (consp (system-metadata-description dao))
+            (first (system-metadata-description dao))
+            (system-metadata-description dao)))
+  (call-next-method dao))
 
 (define-json-db-class abstract-metadata-depends-on ()
-  ((name :col-type :text)
+  ((metadata :col-type system-metadata)
+   (name :col-type :text)
    (version :col-type (or :null :text))
    (feature :col-type (or :null :text)) ; s-expression to string
    )
   (:abstract t))
 
-(defmethod convert-json-aux :around ((class-name (eql 'abstract-metadata-depends-on)) initargs)
-  (destructuring-bind (&key name version feature) initargs
-    (call-next-method class-name
-                      (list :name name
-                            :version version
-                            :feature (prin1-to-string feature)))))
+(defmethod convert-json-aux :around ((dao abstract-metadata-depends-on))
+  (setf (abstract-metadata-depends-on-feature dao)
+        (prin1-to-string (abstract-metadata-depends-on-feature dao)))
+  (call-next-method dao))
 
 (define-json-db-class metadata-defsystem-depends-on (abstract-metadata-depends-on) ())
 (define-json-db-class metadata-depends-on (abstract-metadata-depends-on) ())
@@ -117,6 +119,7 @@
 
 (defun create-system-db (systems)
   (maphash (lambda (system-name system)
+             (format t "~A~%" system-name)
              (setf $system-name system-name)
              (setf $system system)
              (convert-json 'system system))
