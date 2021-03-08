@@ -14,8 +14,15 @@
 
 (defvar *json-db-classes* '())
 
+(defun json-class-direct-superclasses (class-name)
+  (get class-name 'direct-superclasses))
+
 (defun json-class-direct-slots (class-name)
   (get class-name 'direct-slots))
+
+(defun json-class-slots (class-name)
+  (append (json-class-direct-slots class-name)
+          (mapcan #'json-class-slots (json-class-direct-superclasses class-name))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun construct-accessor (class-name slot-name)
@@ -54,7 +61,7 @@
 
 (defun convert-json-1 (class-name json parent-class)
   (let ((initargs
-          (loop :for (slot-name . options) :in (json-class-direct-slots class-name)
+          (loop :for (slot-name . options) :in (json-class-slots class-name)
                 :unless (getf options :relational-type)
                 :collect (make-keyword (string slot-name)) :and
                 :collect (cond ((eq (getf options :col-type)
