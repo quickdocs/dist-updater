@@ -42,8 +42,8 @@
          ,(loop :for (slot-name . options) :in direct-slots
                 :collect `(,slot-name ,@options
                                       :accessor ,(construct-accessor class-name slot-name)
-                                      ,@(if (getf options :relational-type)
-                                            (list :ghost t))))
+                                      ,@(unless (getf options :col-type)
+                                          (list :ghost t))))
          (:auto-pk :uuid)
          ,@defclass-options))))
 
@@ -52,7 +52,7 @@
 
 (defgeneric convert-json-aux (dao))
 (defmethod convert-json-aux (dao)
-  (mito:save-dao dao))
+  dao)
 
 (defun array-col-type-p (col-type)
   (and (keywordp col-type)
@@ -62,13 +62,13 @@
 (defun convert-json-1 (class-name json parent-class)
   (let ((initargs
           (loop :for (slot-name . options) :in (json-class-slots class-name)
-                :unless (getf options :relational-type)
+                :when (getf options :col-type)
                 :collect (make-keyword (string slot-name)) :and
                 :collect (cond ((eq (getf options :col-type)
                                     (type-of parent-class))
                                 parent-class)
                                ((array-col-type-p (getf options :col-type))
-                                (coerce (gethash (slot-to-key-name slot-name) json) 'vector))
+                                (gethash (slot-to-key-name slot-name) json))
                                (t
                                 (gethash (slot-to-key-name slot-name) json))))))
     (convert-json-aux (apply #'make-instance class-name initargs))))
@@ -87,6 +87,7 @@
                               (convert-json relational-name
                                             value
                                             dao)))))))
+    (mito:save-dao dao)
     dao))
 
 (defun json-table-definitions ()

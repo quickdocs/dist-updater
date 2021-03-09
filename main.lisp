@@ -29,16 +29,9 @@
    (system-file-name :col-type :text)
    (required-systems :col-type :text[])))
 
-;;; system
-(define-json-db-class system ()
-  ((name :col-type :text)
-   (system-file-name :col-type :text)
-   (required-systems :col-type :text[])
-   (metadata :relational-type system-metadata :type (or null system-metadata))))
-
+;;; system.metadata
 (define-json-db-class system-metadata ()
-  ((system :col-type system)
-   (name :col-type (or :null :text))
+  ((name :col-type (or :null :text))
    (long-name :col-type (or :null :text))
    (version :col-type (or :null :text))
    (description :col-type (or :null :text))
@@ -91,6 +84,14 @@
 (define-json-db-class metadata-defsystem-depends-on (abstract-metadata-depends-on) ())
 (define-json-db-class metadata-depends-on (abstract-metadata-depends-on) ())
 (define-json-db-class metadata-weakly-depends-on (abstract-metadata-depends-on) ())
+
+;;; system
+(define-json-db-class system ()
+  ((name :col-type :text)
+   (system-file-name :col-type :text)
+   (required-systems :col-type (or :null :text[]))
+   (metadata :col-type (or :null system-metadata)
+             :relational-type system-metadata)))
 
 ;;;
 (defvar *release-table* (make-hash-table))
