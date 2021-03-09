@@ -26,13 +26,12 @@
     pathname))
 
 (defun fetch (url)
-  (let ((data (dex:get url))
-        (pathname (url-to-local-pathname url)))
+  (let ((pathname (url-to-local-pathname url)))
     (cond ((uiop:file-exists-p pathname)
            (values (read-file-into-string pathname) t))
           (t
            (ensure-directories-exist pathname)
-           (values (write-string-into-file data pathname :if-exists :supersede)
+           (values (write-string-into-file (dex:get url) pathname :if-exists :supersede)
                    nil)))))
 
 (defun fetch-releases (&optional (url *releases-json-url*))
