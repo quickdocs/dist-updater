@@ -28,6 +28,20 @@
   (defun construct-accessor (class-name slot-name)
     (symbolicate class-name '- slot-name)))
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun construct-1-n-def-accessors (class-name direct-slots)
+    (with-unique-names (instance)
+      (loop :for (slot-name . options) :in direct-slots
+            :when (and (getf options :relational-type)
+                       (eq (getf options :type) 'list))
+            :collect `(defmethod ,(construct-accessor class-name slot-name) ((,instance ,class-name))
+                        (if (slot-boundp ,instance ',slot-name)
+                            (slot-value ,instance ',slot-name)
+                            (setf (slot-value ,instance ',slot-name)
+                                  (mito:retrieve-dao ',(getf options :relational-type)
+                                                     ,(make-keyword class-name)
+                                                     ,instance))))))))
+
 (defmacro define-json-db-class (class-name direct-superclasses direct-slots
                                 &rest defclass-options)
   (let ((abstract (assoc-value defclass-options :abstract))
@@ -45,7 +59,8 @@
                                       ,@(unless (getf options :col-type)
                                           (list :ghost t))))
          (:auto-pk :uuid)
-         ,@defclass-options))))
+         ,@defclass-options)
+       ,@(construct-1-n-def-accessors class-name direct-slots))))
 
 (defun slot-to-key-name (slot-name)
   (cl-change-case:snake-case (string slot-name)))
@@ -68,7 +83,10 @@
                                     (type-of parent-class))
                                 parent-class)
                                ((array-col-type-p (getf options :col-type))
-                                (gethash (slot-to-key-name slot-name) json))
+                                (let ((value (gethash (slot-to-key-name slot-name) json)))
+                                  (if (listp value)
+                                      (coerce value 'vector)
+                                      value)))
                                (t
                                 (gethash (slot-to-key-name slot-name) json))))))
     (convert-json-aux (apply #'make-instance class-name initargs))))

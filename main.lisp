@@ -48,12 +48,16 @@
    (weakly-depends-on :relational-type metadata-weakly-depends-on :type list)))
 
 (defun normalize-array (value)
-  (coerce (ensure-list (if (and (or (consp value) (vectorp value))
-                                (length= value 2)
-                                (equal "quote" (elt value 0)))
-                           (elt value 1)
-                           value))
-          'vector))
+  (flet ((ensure-seq (x)
+           (typecase x
+             (list (coerce x 'vector))
+             (string (vector x))
+             (vector x))))
+    (ensure-seq (if (and (or (consp value) (vectorp value))
+                         (length= value 2)
+                         (equal "quote" (elt value 0)))
+                    (elt value 1)
+                    value))))
 
 (defmethod convert-json-aux :around ((dao system-metadata))
   (setf (system-metadata-author dao)
@@ -69,7 +73,7 @@
   (call-next-method dao))
 
 (define-json-db-class abstract-metadata-depends-on ()
-  ((metadata :col-type system-metadata)
+  ((system-metadata :col-type system-metadata)
    (name :col-type :text)
    (version :col-type (or :null :text))
    (feature :col-type (or :null :text)) ; s-expression to string
