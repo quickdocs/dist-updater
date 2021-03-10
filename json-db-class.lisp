@@ -126,6 +126,10 @@
          (cl-change-case:snake-case
           (string name))))))))
 
+(defun delete-all-records ()
+  (dolist (name *json-db-classes*)
+    (mito:delete-by-values name)))
+
 (defun migrate-all-json-tables ()
   (dolist (name *json-db-classes*)
     (mito:migrate-table name)))
