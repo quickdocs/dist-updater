@@ -39,8 +39,8 @@
                             (slot-value ,instance ',slot-name)
                             (setf (slot-value ,instance ',slot-name)
                                   (mito:retrieve-dao ',(getf options :relational-type)
-                                                     ,(make-keyword class-name)
-                                                     ,instance))))))))
+                                                     ,(make-keyword (symbolicate class-name '-id))
+                                                     (mito:object-id ,instance)))))))))
 
 (defmacro define-json-db-class (class-name direct-superclasses direct-slots
                                 &rest defclass-options)
@@ -70,9 +70,10 @@
   dao)
 
 (defun array-col-type-p (col-type)
-  (and (keywordp col-type)
-       (ppcre:register-groups-bind (scalar-type) ("(.*)\\[\\]$" (string col-type))
-         scalar-type)))
+  (let ((col-type (mito.dao.mixin::parse-col-type col-type)))
+    (and (keywordp col-type)
+         (ppcre:register-groups-bind (scalar-type) ("(.*)\\[\\]$" (string col-type))
+           scalar-type))))
 
 (defun convert-json-1 (class-name json parent-class)
   (let ((initargs
