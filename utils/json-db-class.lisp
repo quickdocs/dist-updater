@@ -61,6 +61,15 @@
          ,@defclass-options)
        ,@(construct-1-n-def-accessors class-name direct-slots))))
 
+(defun generate-defpackage-export (&optional class-name)
+  (if class-name
+      (cons (make-keyword class-name)
+            (mapcar (lambda (slot)
+                      (make-keyword (construct-accessor class-name (first slot))))
+                    (json-class-direct-slots class-name)))
+      (mapcan #'generate-defpackage-export
+              *json-db-classes*)))
+
 (defun slot-to-key-name (slot-name)
   (cl-change-case:snake-case (string slot-name)))
 

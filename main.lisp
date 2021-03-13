@@ -1,8 +1,9 @@
 (defpackage :dist-updater/main
   (:use :cl
         :alexandria
+        :dist-updater/utils/fetch
         :dist-updater/utils/json-db-class
-        :dist-updater/utils/fetch)
+        :dist-updater/db-classes)
   (:import-from :yason)
   (:import-from :mito))
 (in-package :dist-updater/main)
@@ -37,6 +38,7 @@
 (defun create-system-db (systems-json)
   (let ((systems '()))
     (maphash (lambda (system-name system-json)
+               (declare (ignore system-name))
                (push (convert-json 'system system-json)
                      systems))
              systems-json)
@@ -87,7 +89,7 @@
                          (system-metadata-long-description metadata)))
           (assert (equalp (coerce (ensure-list (gethash "author" json)) 'vector)
                           (coerce (system-metadata-author metadata) 'vector)))
-          (assert (equalp (normalize-array (gethash "maintainer" json))
+          (assert (equalp (dist-updater/db-classes::normalize-array (gethash "maintainer" json))
                           (coerce (system-metadata-maintainer metadata) 'vector)))
           (assert (equal (gethash "mailto" json)
                          (system-metadata-mailto metadata)))
