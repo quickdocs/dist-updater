@@ -12,11 +12,6 @@
 (defparameter *releases-json-url*
   "https://storage.googleapis.com/quickdocs-dist/quicklisp/2021-02-28/releases.json")
 
-#+(or)
-(defmethod print-object ((object hash-table) stream)
-  (print-unreadable-object (object stream :type t)
-    (prin1 (hash-table-alist object) stream)))
-
 ;;; release
 (define-json-db-class release ()
   ((project-name :col-type :text)
