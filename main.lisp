@@ -1,7 +1,6 @@
 (defpackage :dist-updater/main
   (:use :cl
         :alexandria
-        :dist-updater/db
         :dist-updater/json-db-class
         :dist-updater/fetch)
   (:import-from :yason)
@@ -109,6 +108,20 @@
    (required-systems :col-type (or :null :text[]))
    (metadata :col-type (or :null system-metadata)
              :relational-type system-metadata)))
+
+;;;
+(defmacro with-transaction* ((&key (rollback t)) &body body)
+  `(dbi:with-transaction mito:*connection*
+     (let ((mito:*mito-logger-stream* *standard-output*))
+       (prog1 (progn ,@body)
+         (when ,rollback (dbi:rollback mito:*connection*))))))
+
+(defun connect-db ()
+  (mito:connect-toplevel :postgres :database-name "quickdocs"))
+
+(defun ensure-connection ()
+  (or mito:*connection*
+      (connect-db)))
 
 ;;;
 (defun fetch-and-create-release-db ()
