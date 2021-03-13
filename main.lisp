@@ -8,6 +8,11 @@
   (:import-from :mito))
 (in-package :dist-updater/main)
 
+(defparameter *info-json-url*
+  "https://storage.googleapis.com/quickdocs-dist/quicklisp/2021-02-28/info.json")
+(defparameter *releases-json-url*
+  "https://storage.googleapis.com/quickdocs-dist/quicklisp/2021-02-28/releases.json")
+
 #+(or)
 (defmethod print-object ((object hash-table) stream)
   (print-unreadable-object (object stream :type t)
@@ -106,35 +111,16 @@
              :relational-type system-metadata)))
 
 ;;;
-(defvar *release-table* (make-hash-table))
-
-(defun download-all-releases ()
-  (let ((release-table (make-hash-table)))
-    (maphash (lambda (name url)
-               (print (cons name url))
-               (let ((yason (yason:parse (fetch url))))
-                 (setf (gethash name release-table) yason)))
-             (fetch-releases))
-    (setf *release-table* release-table)))
-
-;; for debug
-(defvar $release-name)
-(defvar $release-yason)
-(defvar $system-name)
-(defvar $system-json)
-
 (defun fetch-and-create-release-db ()
   (maphash (lambda (name url)
              (format t "~&fetch ~A, ~A~&" name url)
              (let ((json (yason:parse (fetch url))))
                (convert-json 'release json)))
-           (fetch-releases)))
+           (yason:parse (fetch *releases-json-url*))))
 
 (defun create-system-db (systems-json)
   (let ((systems '()))
     (maphash (lambda (system-name system-json)
-               (setf $system-name system-name)
-               (setf $system-json system-json)
                (push (convert-json 'system system-json)
                      systems))
              systems-json)
@@ -154,25 +140,13 @@
 (defun main ()
   (ensure-connection)
   (fetch-and-create-release-db)
-  (create-all-systems-db)
-  )
+  (create-all-systems-db))
 
-;;;
-(defun delete-systems ()
-  (mito:delete-by-values 'system)
-  (mito:delete-by-values 'system-metadata)
-  (mito:delete-by-values 'abstract-metadata-depends-on)
-  (mito:delete-by-values 'metadata-defsystem-depends-on)
-  (mito:delete-by-values 'metadata-depends-on)
-  (mito:delete-by-values 'metadata-weakly-depends-on))
-
+;;; test
 (defun validate (json systems)
-  (defparameter $json json)
-  (defparameter $systems systems)
   (dolist (system systems)
     (let ((json (gethash (system-name system) json))
           (system (mito:find-dao 'system :id (mito:object-id system))))
-      (defparameter $system system)
       (assert (equal (gethash "name" json)
                      (system-name system)))
       (assert (equal (gethash "system_file_name" json)
