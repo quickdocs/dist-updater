@@ -1,4 +1,4 @@
-(defpackage :dist-updater/json-db-class
+(defpackage :dist-updater/utils/json-db-class
   (:use :cl
         :alexandria)
   (:import-from :mito)
@@ -8,7 +8,7 @@
            :convert-json
            :generate-json-tables
            :migrate-all-json-tables))
-(in-package :dist-updater/json-db-class)
+(in-package :dist-updater/utils/json-db-class)
 
 (defvar *json-db-classes* '())
 

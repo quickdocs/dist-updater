@@ -1,10 +1,10 @@
-(defpackage :dist-updater/fetch
+(defpackage :dist-updater/utils/fetch
   (:use :cl :alexandria)
   (:import-from :quri)
   (:import-from :dexador)
   (:import-from :yason)
   (:export :fetch))
-(in-package :dist-updater/fetch)
+(in-package :dist-updater/utils/fetch)
 
 (defun url-to-local-pathname (url)
   (let* ((path (quri:uri-path (quri:uri url)))
