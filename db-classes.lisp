@@ -1,5 +1,6 @@
 (defpackage :dist-updater/db-classes
   (:use :cl
+        :alexandria
         :dist-updater/utils/json-db-class)
   (:export
    :release
