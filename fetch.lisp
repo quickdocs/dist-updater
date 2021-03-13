@@ -3,8 +3,7 @@
   (:import-from :quri)
   (:import-from :dexador)
   (:import-from :yason)
-  (:export :fetch
-           :fetch-releases))
+  (:export :fetch))
 (in-package :dist-updater/fetch)
 
 (defun url-to-local-pathname (url)
