@@ -47,7 +47,8 @@
   (let ((abstract (assoc-value defclass-options :abstract))
         (defclass-options (remove :abstract defclass-options :key #'first)))
     `(progn
-       (pushnew ',class-name *json-db-classes*)
+       (unless (member ',class-name *json-db-classes*)
+         (nconcf *json-db-classes* (list ',class-name)))
        (setf (get ',class-name 'direct-slots) ',direct-slots)
        (setf (get ',class-name 'direct-superclasses) ',direct-superclasses)
        ,@(when abstract
@@ -94,7 +95,7 @@
 
 (defun convert-json (class-name json &optional parent-class)
   (let ((dao (convert-json-1 class-name json parent-class)))
-    (loop :for (slot-name . options) :in (json-class-direct-slots class-name)
+    (loop :for (slot-name . options) :in (json-class-slots class-name)
           :do (when (getf options :relational-type)
                 (setf (slot-value dao slot-name)
                       (let* ((relational-name (getf options :relational-type))
@@ -110,7 +111,7 @@
     dao))
 
 (defun json-table-definitions ()
-  (loop :for name :in (reverse *json-db-classes*)
+  (loop :for name :in *json-db-classes*
         :append (mito:table-definition name)))
 
 (defun gen-json-tables ()
