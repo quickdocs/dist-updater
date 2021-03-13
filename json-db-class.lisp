@@ -4,10 +4,10 @@
   (:import-from :mito)
   (:import-from :cl-change-case)
   (:export :define-json-db-class
-           :gen-json-tables
-           :migrate-all-json-tables
            :convert-json-aux
-           :convert-json))
+           :convert-json
+           :generate-json-tables
+           :migrate-all-json-tables))
 (in-package :dist-updater/json-db-class)
 
 (defvar *json-db-classes* '())
@@ -112,7 +112,7 @@
   (loop :for name :in *json-db-classes*
         :append (mito:table-definition name)))
 
-(defun gen-json-tables ()
+(defun generate-json-tables ()
   (mapc #'mito:execute-sql
         (json-table-definitions)))
 
