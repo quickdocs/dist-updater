@@ -9,7 +9,8 @@
 
 (defun url-to-local-pathname (url)
   (let* ((path (quri:uri-path (quri:uri url)))
-         (pathname (asdf:system-relative-pathname :dist-updater (pathname (string-left-trim "/" path)))))
+         (pathname (asdf:system-relative-pathname :dist-updater
+                                                  (pathname (string-left-trim "/" path)))))
     pathname))
 
 (defun fetch (url)
