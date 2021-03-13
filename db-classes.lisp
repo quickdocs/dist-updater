@@ -83,7 +83,7 @@
 
 (defun normalize-array (value)
   (flet ((ensure-seq (x)
-           (typecase x
+           (etypecase x
              (list (coerce x 'vector))
              (string (vector x))
              (vector x))))
