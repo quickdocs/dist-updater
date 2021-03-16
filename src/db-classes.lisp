@@ -77,7 +77,8 @@
    (readme-files :relational-type readme-file :type list)))
 
 (define-json-db-class readme-file ()
-  ((filename :col-type :text)
+  ((readme :col-type readme)
+   (filename :col-type :text)
    (content :col-type :text)))
 
 ;;; system.metadata
