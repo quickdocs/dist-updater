@@ -31,8 +31,11 @@
 (defun fetch-and-create-release-db ()
   (maphash (lambda (name url)
              (format t "~&fetch ~A, ~A~&" name url)
-             (let ((json (yason:parse (fetch url))))
-               (convert-json 'release json)))
+             (let* ((release-json (yason:parse (fetch url)))
+                    (release (convert-json 'release release-json))
+                    (readme-json (yason:parse (fetch (release-readme-url release))))
+                    (readme (convert-json 'readme readme-json)))
+               (declare (ignore readme))))
            (yason:parse (fetch *releases-json-url*))))
 
 (defun create-system-db (systems-json)
