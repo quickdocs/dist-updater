@@ -22,7 +22,10 @@
          (when ,rollback (dbi:rollback mito:*connection*))))))
 
 (defun connect-db ()
-  (mito:connect-toplevel :postgres :database-name "quickdocs"))
+  (mito:connect-toplevel :postgres
+                         :database-name "quickdocs"
+                         :username "quickdocs"
+                         :password "quickdocs"))
 
 (defun ensure-connection ()
   (or mito:*connection*
