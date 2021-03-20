@@ -7,6 +7,7 @@
            :convert-json-aux
            :convert-json
            :generate-json-tables
+           :delete-all-json-table-records
            :migrate-all-json-tables))
 (in-package :dist-updater/utils/json-db-class)
 
@@ -137,7 +138,7 @@
          (cl-change-case:snake-case
           (string name))))))))
 
-(defun delete-all-records ()
+(defun delete-all-json-table-records ()
   (dolist (name *json-db-classes*)
     (mito:delete-by-values name)))
 
