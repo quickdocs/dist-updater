@@ -5,7 +5,8 @@
         :dist-updater/utils/json-db-class
         :dist-updater/db-classes)
   (:import-from :yason)
-  (:import-from :mito))
+  (:import-from :mito)
+  (:export :main))
 (in-package :dist-updater/main)
 
 (defparameter *info-json-url*
