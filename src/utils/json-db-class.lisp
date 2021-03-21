@@ -8,7 +8,7 @@
            :convert-json
            :generate-json-tables
            :delete-all-json-table-records
-           :migrate-all-json-tables))
+           :generate-migrations))
 (in-package :dist-updater/utils/json-db-class)
 
 (defvar *json-db-classes* '())
@@ -142,6 +142,14 @@
   (dolist (name *json-db-classes*)
     (mito:delete-by-values name)))
 
+#+(or)
 (defun migrate-all-json-tables ()
   (dolist (name *json-db-classes*)
     (mito:migrate-table name)))
+
+(defun generate-migrations (&optional (stream *standard-output*))
+  (dolist (name *json-db-classes*)
+    (dolist (ex (if (mito.db:table-exists-p mito:*connection* (mito.class:table-name (find-class name)))
+                    (mito:migration-expressions name)
+                    (mito:table-definition name)))
+      (format stream "~A;~%" (sxql:yield ex)))))
