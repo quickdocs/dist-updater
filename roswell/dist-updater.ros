@@ -1,0 +1,18 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  #+quicklisp(ql:quickload '(:dist-updater) :silent t)
+  )
+
+(defpackage :ros.script.dist-updater.3825248171
+  (:use :cl))
+(in-package :ros.script.dist-updater.3825248171)
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (dist-updater/main:main))
+;;; vim: set ft=lisp lisp:
