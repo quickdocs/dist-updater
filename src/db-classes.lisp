@@ -12,6 +12,7 @@
    :release-systems
    :release-systems-metadata-url
    :release-readme-url
+   :release-upstream-url
    :release-system
    :release-system-release
    :release-system-name
@@ -63,7 +64,8 @@
    (prefix :col-type :text)
    (systems :relational-type release-system :type list)
    (systems-metadata-url :col-type :text)
-   (readme-url :col-type :text)))
+   (readme-url :col-type :text)
+   (upstream-url :col-type :text)))
 
 (define-json-db-class release-system ()
   ((release :col-type release)
