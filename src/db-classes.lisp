@@ -113,13 +113,22 @@
                     (elt value 1)
                     value))))
 
+(defun normalize-source-control (value)
+  (typecase value
+    (vector (normalize-source-control (coerce value 'list)))
+    (cons (destructuring-bind (type url)
+              value
+            (normalize-array
+              (list (or type "unknown") url))))
+    (otherwise (normalize-array value))))
+
 (defmethod convert-json-aux :around ((dao system-metadata))
   (setf (system-metadata-author dao)
         (normalize-array (system-metadata-author dao)))
   (setf (system-metadata-maintainer dao)
         (normalize-array (system-metadata-maintainer dao)))
   (setf (system-metadata-source-control dao)
-        (normalize-array (system-metadata-source-control dao)))
+        (normalize-source-control (system-metadata-source-control dao)))
   (setf (system-metadata-description dao)
         (if (consp (system-metadata-description dao))
             (first (system-metadata-description dao))
