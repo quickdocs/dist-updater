@@ -7,6 +7,7 @@ CREATE TABLE release (
     prefix TEXT NOT NULL,
     systems_metadata_url TEXT NOT NULL,
     readme_url TEXT NOT NULL,
+    upstream_url TEXT NOT NULL,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ
 );
