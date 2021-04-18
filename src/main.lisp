@@ -1,13 +1,14 @@
-(defpackage :dist-updater/main
-  (:use :cl
-        :alexandria
-        :dist-updater/utils/fetch
-        :dist-updater/utils/json-db-class
-        :dist-updater/db-classes)
-  (:import-from :yason)
-  (:import-from :mito)
-  (:export :main))
-(in-package :dist-updater/main)
+(defpackage #:dist-updater/main
+  (:nicknames #:dist-updater)
+  (:use #:cl
+        #:alexandria
+        #:dist-updater/utils/fetch
+        #:dist-updater/utils/json-db-class
+        #:dist-updater/db-classes)
+  (:import-from #:yason)
+  (:import-from #:mito)
+  (:export #:main))
+(in-package #:dist-updater/main)
 
 (defparameter *info-json-url*
   "https://storage.googleapis.com/quickdocs-dist/quicklisp/2021-02-28/info.json")
@@ -20,16 +21,6 @@
      (let ((mito:*mito-logger-stream* *standard-output*))
        (prog1 (progn ,@body)
          (when ,rollback (dbi:rollback mito:*connection*))))))
-
-(defun connect-db ()
-  (mito:connect-toplevel :postgres
-                         :database-name "quickdocs"
-                         :username "quickdocs"
-                         :password "quickdocs"))
-
-(defun ensure-connection ()
-  (or mito:*connection*
-      (connect-db)))
 
 ;;;
 (defun fetch-and-create-release-db ()
@@ -63,10 +54,18 @@
                    (systems (create-system-db json)))
               (validate json systems))))
 
-(defun main ()
-  (ensure-connection)
-  (fetch-and-create-release-db)
-  (create-all-systems-db))
+(defun main (dist-version &rest connect-args)
+  (unless (and (stringp dist-version)
+               (not (uiop:emptyp dist-version)))
+    (format *error-output* "~&The dist version is required.~%")
+    (uiop:quit -1))
+
+  (let ((mito:*connection* (apply #'dbi:connect :postgres connect-args)))
+    (unwind-protect
+        (progn
+          (fetch-and-create-release-db)
+          (create-all-systems-db))
+      (dbi:disconnect mito:*connection*))))
 
 ;;; test
 (defmacro assert* (form)

@@ -82,7 +82,7 @@
   dao)
 
 (defun array-col-type-p (col-type)
-  (let ((col-type (mito.dao.mixin::parse-col-type col-type)))
+  (let ((col-type (mito.class.column::parse-col-type col-type)))
     (and (keywordp col-type)
          (ppcre:register-groups-bind (scalar-type) ("(.*)\\[\\]$" (string col-type))
            scalar-type))))
