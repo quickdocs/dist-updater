@@ -9,11 +9,11 @@ DB_PASSWORD := quickdocs
 
 .PHONY: build
 build:
-	docker build -t dist-updater .
+	docker build -t quickdocs-dist-updater .
 
 .PHONY: run
 run:
-	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) dist-updater \
+	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) quickdocs-dist-updater \
 		$(VERSION) \
 		--host $(DB_HOST) --port $(DB_PORT) \
 		--dbname $(DB_NAME) --username $(DB_USERNAME) --password $(DB_PASSWORD)
