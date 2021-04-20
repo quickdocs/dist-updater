@@ -15,7 +15,6 @@ CREATE TABLE "system_metadata" (
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-
 CREATE TABLE "system" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
@@ -25,7 +24,6 @@ CREATE TABLE "system" (
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-
 CREATE TABLE "abstract_metadata_depends_on" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "system_metadata_id" VARCHAR(36) NOT NULL,
@@ -35,7 +33,6 @@ CREATE TABLE "abstract_metadata_depends_on" (
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-
 CREATE TABLE "metadata_weakly_depends_on" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "system_metadata_id" VARCHAR(36) NOT NULL,
@@ -45,7 +42,6 @@ CREATE TABLE "metadata_weakly_depends_on" (
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-
 CREATE TABLE "metadata_depends_on" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "system_metadata_id" VARCHAR(36) NOT NULL,
@@ -55,7 +51,6 @@ CREATE TABLE "metadata_depends_on" (
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-
 CREATE TABLE "metadata_defsystem_depends_on" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "system_metadata_id" VARCHAR(36) NOT NULL,
@@ -65,14 +60,12 @@ CREATE TABLE "metadata_defsystem_depends_on" (
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-
 CREATE TABLE "readme" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-
 CREATE TABLE "readme_file" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "readme_id" VARCHAR(36) NOT NULL,
@@ -81,7 +74,6 @@ CREATE TABLE "readme_file" (
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-
 CREATE TABLE "release" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "project_name" TEXT NOT NULL,
@@ -95,7 +87,6 @@ CREATE TABLE "release" (
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-
 CREATE TABLE "release_system" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "release_id" VARCHAR(36) NOT NULL,
@@ -104,9 +95,4 @@ CREATE TABLE "release_system" (
     "required_systems" TEXT[] NOT NULL,
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
-);
-
-CREATE TABLE IF NOT EXISTS "schema_migrations" (
-    "version" VARCHAR(255) PRIMARY KEY,
-    "applied_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

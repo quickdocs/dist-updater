@@ -18,6 +18,18 @@ run:
 		--host $(DB_HOST) --port $(DB_PORT) \
 		--dbname $(DB_NAME) --username $(DB_USERNAME) --password $(DB_PASSWORD)
 
+.PHONY: generate-migrations
+generate-migrations:
+	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) --entrypoint sbcl quickdocs-dist-updater \
+		--noinform --non-interactive \
+		--eval '(ql:quickload :dist-updater)' \
+		--eval '(mito:connect-toplevel :postgres :database-name "$(DB_NAME)" :host "$(DB_HOST)" :port $(DB_PORT) :username "$(DB_USERNAME)" :password "$(DB_PASSWORD)")' \
+		--eval '(mito:generate-migrations #P"db/")'
+
 .PHONY: db
 db:
-	PGPASSWORD=$(DB_PASSWORD) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USERNAME) $(DB_NAME) < db/schema.sql
+	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) --entrypoint sbcl quickdocs-dist-updater \
+		--noinform --non-interactive \
+		--eval '(ql:quickload :dist-updater)' \
+		--eval '(mito:connect-toplevel :postgres :database-name "$(DB_NAME)" :host "$(DB_HOST)" :port $(DB_PORT) :username "$(DB_USERNAME)" :password "$(DB_PASSWORD)")' \
+		--eval '(mito:migrate #P"db/")'

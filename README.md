@@ -11,7 +11,8 @@ Requires a PostgreSQL server to be accessible from the running machine. The defa
 If runs PostgreSQL with Docker, run the following command:
 
 ```
-$ docker run --rm -it -p 5432:5432 -v ${PWD}/db/data:/var/lib/postgresql/data -e POSTGRES_DB=quickdocs -e POSTGRES_USER=quickdocs -e POSTGRES_PASSWORD=quickdocs postgres:10.1
+$ docker run -d -p 5432:5432 -v ${PWD}/db/data:/var/lib/postgresql/data -e POSTGRES_DB=quickdocs -e POSTGRES_USER=quickdocs -e POSTGRES_PASSWORD=quickdocs postgres:10.1
+$ make db DB_PORT=5432
 ```
 
 To initialize the database, run `make db` at this project root.
