@@ -7,6 +7,10 @@ DB_NAME := quickdocs
 DB_USERNAME := quickdocs
 DB_PASSWORD := quickdocs
 
+ifndef version
+override version = $(shell curl -s -L http://storage.googleapis.com/quickdocs-dist/quicklisp/info.json | jq -r ".latest_version")
+endif
+
 .PHONY: build
 build:
 	docker build -t quickdocs-dist-updater .
@@ -14,7 +18,7 @@ build:
 .PHONY: run
 run:
 	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) quickdocs-dist-updater \
-		$(VERSION) \
+		$(version) \
 		--host $(DB_HOST) --port $(DB_PORT) \
 		--dbname $(DB_NAME) --username $(DB_USERNAME) --password $(DB_PASSWORD)
 

@@ -5,6 +5,7 @@ This tool is a part of Quickdocs to download extracted dist data from GCS and st
 ## Requirement
 
 * Docker Engine
+* jq
 
 Requires a PostgreSQL server to be accessible from the running machine. The default is localhost:5432.
 
@@ -24,5 +25,5 @@ To initialize the database, run `make db` at this project root.
 $ make build
 
 # Update the DB
-$ make VERSION=2021-02-28 run
+$ make run version=2021-02-28 DB_PORT=5432
 ```
