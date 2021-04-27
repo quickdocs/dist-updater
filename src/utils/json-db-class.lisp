@@ -51,13 +51,17 @@
        (setf (get ',class-name 'direct-superclasses) ',direct-superclasses)
        ,@(when abstract
            `((setf (get ',class-name 'abstract) t)))
-       (mito:deftable ,class-name (,@direct-superclasses)
+       (defclass ,class-name (,@direct-superclasses)
          ,(loop :for (slot-name . options) :in direct-slots
                 :collect `(,slot-name ,@options
                                       :accessor ,(construct-accessor class-name slot-name)
                                       ,@(unless (getf options :col-type)
                                           (list :ghost t))))
+         (:metaclass ,(if abstract
+                          'mito:dao-table-mixin
+                          'mito:dao-table-class))
          (:auto-pk :uuid)
+         (:conc-name ,(intern (format nil "~@:(~A-~)" class-name) (symbol-package class-name)))
          ,@defclass-options)
        ,@(construct-1-n-def-accessors class-name direct-slots))))
 

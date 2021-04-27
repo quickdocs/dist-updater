@@ -52,16 +52,6 @@ CREATE TABLE "system" (
     "updated_at" TIMESTAMPTZ
 );
 
-CREATE TABLE "abstract_metadata_depends_on" (
-    "id" VARCHAR(36) NOT NULL PRIMARY KEY,
-    "system_metadata_id" VARCHAR(36) NOT NULL,
-    "name" TEXT NOT NULL,
-    "version" TEXT,
-    "feature" TEXT,
-    "created_at" TIMESTAMPTZ,
-    "updated_at" TIMESTAMPTZ
-);
-
 CREATE TABLE "metadata_weakly_depends_on" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "system_metadata_id" VARCHAR(36) NOT NULL,
