@@ -7,6 +7,8 @@
         #:dist-updater/db-classes)
   (:import-from #:yason)
   (:import-from #:mito)
+  (:import-from #:sxql
+                #:where)
   (:export #:main))
 (in-package #:dist-updater/main)
 
@@ -56,13 +58,29 @@
                    (systems (create-system-db release json)))
               (validate json systems))))
 
-(defun find-or-create-dist (dist-version)
-  (or (mito:find-dao 'dist
-                     :name "quicklisp"
-                     :version dist-version)
-      (mito:create-dao 'dist
-                       :name "quicklisp"
-                       :version dist-version)))
+(defun find-dist (dist-version &key (name "quicklisp"))
+  (mito:find-dao 'dist
+                 :name name
+                 :version dist-version))
+
+(defun create-dist (dist-version &key (name "quicklisp"))
+  (mito:create-dao 'dist
+                   :name "quicklisp"
+                   :version dist-version))
+
+(defun delete-dist-data (dist)
+  (dolist (release (mito:select-dao 'release
+                     (where (:= :dist dist))))
+    (dolist (system (mito:select-dao 'system
+                      (where (:= :release release))))
+      (when-let ((metadata (system-metadata system)))
+        (mapc #'mito:delete-dao
+              (append (system-metadata-defsystem-depends-on metadata)
+                      (system-metadata-depends-on metadata)
+                      (system-metadata-weakly-depends-on metadata)))
+        (mito:delete-dao metadata))
+      (mito:delete-dao system))
+    (mito:delete-dao release)))
 
 (defun main (dist-version &rest connect-args)
   (unless (and (stringp dist-version)
@@ -72,9 +90,13 @@
 
   (let ((mito:*connection* (apply #'dbi:connect :postgres connect-args)))
     (unwind-protect
-        (let ((dist (find-or-create-dist dist-version)))
-          (fetch-and-create-release-db dist)
-          (create-all-systems-db))
+        (dbi:with-transaction mito:*connection*
+          (let ((dist (find-dist dist-version)))
+            (if dist
+                (delete-dist-data dist)
+                (setf dist (create-dist dist-version)))
+            (fetch-and-create-release-db dist)
+            (create-all-systems-db)))
       (dbi:disconnect mito:*connection*))))
 
 ;;; test
