@@ -3,21 +3,18 @@
         :alexandria
         :dist-updater/utils/json-db-class)
   (:export
+   :dist
+   :dist-name
+   :dist-version
    :release
    :release-project-name
    :release-archive-url
    :release-archive-size
    :release-archive-content-sha1
    :release-prefix
-   :release-systems
    :release-systems-metadata-url
    :release-readme-url
    :release-upstream-url
-   :release-system
-   :release-system-release
-   :release-system-name
-   :release-system-system-file-name
-   :release-system-required-systems
    :system-metadata
    :system-metadata-name
    :system-metadata-long-name
@@ -55,23 +52,23 @@
    :readme-readme-files))
 (in-package :dist-updater/db-classes)
 
+(define-json-db-class dist ()
+  ((name :col-type (:varchar 32))
+   (version :col-type (:char 10)))
+  (:unique-keys (name version)))
+
 ;;; release
 (define-json-db-class release ()
-  ((project-name :col-type :text)
+  ((dist :col-type dist)
+   (project-name :col-type (:varchar 64))
    (archive-url :col-type :text)
    (archive-size :col-type :integer)
    (archive-content-sha1 :col-type (:varchar 40))
    (prefix :col-type :text)
-   (systems :relational-type release-system :type list)
    (systems-metadata-url :col-type :text)
    (readme-url :col-type :text)
-   (upstream-url :col-type :text)))
-
-(define-json-db-class release-system ()
-  ((release :col-type release)
-   (name :col-type :text)
-   (system-file-name :col-type :text)
-   (required-systems :col-type :text[])))
+   (upstream-url :col-type :text))
+  (:unique-keys (dist project-name)))
 
 ;;; readme
 (define-json-db-class readme ()
@@ -163,7 +160,8 @@
 
 ;;; system
 (define-json-db-class system ()
-  ((name :col-type :text)
+  ((release :col-type release)
+   (name :col-type :text)
    (system-file-name :col-type :text)
    (required-systems :col-type (or :null :text[]))
    (metadata :col-type (or :null system-metadata)

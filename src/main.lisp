@@ -23,21 +23,23 @@
          (when ,rollback (dbi:rollback mito:*connection*))))))
 
 ;;;
-(defun fetch-and-create-release-db ()
+(defun fetch-and-create-release-db (dist)
   (maphash (lambda (name url)
              (format t "~&fetch ~A, ~A~&" name url)
-             (when-let* ((release-json (yason:parse (fetch url)))
-                         (release (convert-json 'release release-json))
-                         (json-string (fetch (release-readme-url release)))
-                         (readme-json (unless (emptyp json-string)
-                                        (yason:parse json-string))))
-               (convert-json 'readme readme-json)))
+             (when-let ((release-json (yason:parse (fetch url))))
+               (setf (gethash "dist" release-json) dist)
+               (let ((release (convert-json 'release release-json)))
+                 (when-let* ((json-string (fetch (release-readme-url release)))
+                             (readme-json (unless (emptyp json-string)
+                                            (yason:parse json-string))))
+                   (convert-json 'readme readme-json)))))
            (yason:parse (fetch *releases-json-url*))))
 
-(defun create-system-db (systems-json)
+(defun create-system-db (release systems-json)
   (let ((systems '()))
     (maphash (lambda (system-name system-json)
                (declare (ignore system-name))
+               (setf (gethash "release" system-json) release)
                (push (convert-json 'system system-json)
                      systems))
              systems-json)
@@ -51,8 +53,16 @@
         :do (format t "~&~A ~50T ~D/~D~&" (release-project-name release) progress all-nums)
         :do (let* ((url (release-systems-metadata-url release))
                    (json (yason:parse (fetch url)))
-                   (systems (create-system-db json)))
+                   (systems (create-system-db release json)))
               (validate json systems))))
+
+(defun find-or-create-dist (dist-version)
+  (or (mito:find-dao 'dist
+                     :name "quicklisp"
+                     :version dist-version)
+      (mito:create-dao 'dist
+                       :name "quicklisp"
+                       :version dist-version)))
 
 (defun main (dist-version &rest connect-args)
   (unless (and (stringp dist-version)
@@ -62,8 +72,8 @@
 
   (let ((mito:*connection* (apply #'dbi:connect :postgres connect-args)))
     (unwind-protect
-        (progn
-          (fetch-and-create-release-db)
+        (let ((dist (find-or-create-dist dist-version)))
+          (fetch-and-create-release-db dist)
           (create-all-systems-db))
       (dbi:disconnect mito:*connection*))))
 

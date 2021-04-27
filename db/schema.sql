@@ -1,3 +1,28 @@
+CREATE TABLE "dist" (
+    "id" VARCHAR(36) NOT NULL PRIMARY KEY,
+    "name" VARCHAR(32) NOT NULL,
+    "version" CHAR(10) NOT NULL,
+    "created_at" TIMESTAMPTZ,
+    "updated_at" TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX "unique_dist_name_version" ON "dist" ("name", "version");
+
+CREATE TABLE "release" (
+    "id" VARCHAR(36) NOT NULL PRIMARY KEY,
+    "dist_id" VARCHAR(36) NOT NULL,
+    "project_name" VARCHAR(64) NOT NULL,
+    "archive_url" TEXT NOT NULL,
+    "archive_size" INTEGER NOT NULL,
+    "archive_content_sha1" VARCHAR(40) NOT NULL,
+    "prefix" TEXT NOT NULL,
+    "systems_metadata_url" TEXT NOT NULL,
+    "readme_url" TEXT NOT NULL,
+    "upstream_url" TEXT NOT NULL,
+    "created_at" TIMESTAMPTZ,
+    "updated_at" TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX "unique_release_dist_id_project_name" ON "release" ("dist_id", "project_name");
+
 CREATE TABLE "system_metadata" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
     "name" TEXT,
@@ -18,6 +43,7 @@ CREATE TABLE "system_metadata" (
 
 CREATE TABLE "system" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
+    "release_id" VARCHAR(36) NOT NULL,
     "name" TEXT NOT NULL,
     "system_file_name" TEXT NOT NULL,
     "required_systems" TEXT[],
@@ -78,30 +104,6 @@ CREATE TABLE "readme_file" (
     "readme_id" VARCHAR(36) NOT NULL,
     "filename" TEXT NOT NULL,
     "content" TEXT NOT NULL,
-    "created_at" TIMESTAMPTZ,
-    "updated_at" TIMESTAMPTZ
-);
-
-CREATE TABLE "release" (
-    "id" VARCHAR(36) NOT NULL PRIMARY KEY,
-    "project_name" TEXT NOT NULL,
-    "archive_url" TEXT NOT NULL,
-    "archive_size" INTEGER NOT NULL,
-    "archive_content_sha1" VARCHAR(40) NOT NULL,
-    "prefix" TEXT NOT NULL,
-    "systems_metadata_url" TEXT NOT NULL,
-    "readme_url" TEXT NOT NULL,
-    "upstream_url" TEXT NOT NULL,
-    "created_at" TIMESTAMPTZ,
-    "updated_at" TIMESTAMPTZ
-);
-
-CREATE TABLE "release_system" (
-    "id" VARCHAR(36) NOT NULL PRIMARY KEY,
-    "release_id" VARCHAR(36) NOT NULL,
-    "name" TEXT NOT NULL,
-    "system_file_name" TEXT NOT NULL,
-    "required_systems" TEXT[] NOT NULL,
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
