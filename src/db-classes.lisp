@@ -71,12 +71,8 @@
   (:unique-keys (dist project-name)))
 
 ;;; readme
-(define-json-db-class readme ()
-  ((name :col-type :text)
-   (readme-files :relational-type readme-file :type list)))
-
 (define-json-db-class readme-file ()
-  ((readme :col-type readme)
+  ((release :col-type release)
    (filename :col-type :text)
    (content :col-type :text)))
 

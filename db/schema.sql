@@ -82,16 +82,9 @@ CREATE TABLE "metadata_defsystem_depends_on" (
     "updated_at" TIMESTAMPTZ
 );
 
-CREATE TABLE "readme" (
-    "id" VARCHAR(36) NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "created_at" TIMESTAMPTZ,
-    "updated_at" TIMESTAMPTZ
-);
-
 CREATE TABLE "readme_file" (
     "id" VARCHAR(36) NOT NULL PRIMARY KEY,
-    "readme_id" VARCHAR(36) NOT NULL,
+    "release_id" VARCHAR(36) NOT NULL,
     "filename" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "created_at" TIMESTAMPTZ,

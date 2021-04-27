@@ -34,7 +34,9 @@
                  (when-let* ((json-string (fetch (release-readme-url release)))
                              (readme-json (unless (emptyp json-string)
                                             (yason:parse json-string))))
-                   (convert-json 'readme readme-json)))))
+                   (dolist (readme-file-json (gethash "readme_files" readme-json))
+                     (setf (gethash "release" readme-file-json) release)
+                     (convert-json 'readme-file readme-file-json))))))
            (yason:parse (fetch *releases-json-url*))))
 
 (defun create-system-db (release systems-json)
