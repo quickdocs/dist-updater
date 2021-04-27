@@ -30,6 +30,14 @@ generate-migrations:
 		--eval '(mito:connect-toplevel :postgres :database-name "$(DB_NAME)" :host "$(DB_HOST)" :port $(DB_PORT) :username "$(DB_USERNAME)" :password "$(DB_PASSWORD)")' \
 		--eval '(mito:generate-migrations #P"db/")'
 
+.PHONY: migrate
+migrate:
+	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) --entrypoint sbcl quickdocs-dist-updater \
+		--noinform --non-interactive \
+		--eval '(ql:quickload :dist-updater)' \
+		--eval '(mito:connect-toplevel :postgres :database-name "$(DB_NAME)" :host "$(DB_HOST)" :port $(DB_PORT) :username "$(DB_USERNAME)" :password "$(DB_PASSWORD)")' \
+		--eval '(mito:migrate #P"db/")'
+
 .PHONY: db
 db:
 	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) --entrypoint sbcl quickdocs-dist-updater \
