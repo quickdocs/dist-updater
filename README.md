@@ -25,3 +25,14 @@ $ docker run --rm -it --net=host quickdocs/dist-updater update 2021-02-28
 # Access to DB on the other host/port (ex. 10.0.9.14:15432)
 $ docker run --rm -it --net=host -e DB_HOST=10.0.9.14 -e DB_PORT=15432 quickdocs/dist-updater update 2021-02-28
 ```
+
+## Developer note
+
+```
+# Build an image for development
+$ make build
+
+# Run 'update' process (default dist version is latest one)
+$ make update
+$ make update version=2021-02-28
+```

@@ -1,4 +1,4 @@
-all: run
+all: build
 
 NETWORK := host
 DB_HOST := localhost
@@ -15,8 +15,8 @@ endif
 build:
 	docker build -t quickdocs-dist-updater -f Dockerfile .
 
-.PHONY: run
-run:
+.PHONY: update
+update:
 	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) \
 		-e DB_HOST=$(DB_HOST) -e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) -e DB_USERNAME=$(DB_USERNAME) -e DB_PASSWORD=$(DB_PASSWORD) \
