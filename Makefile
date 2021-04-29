@@ -17,7 +17,11 @@ build:
 
 .PHONY: release
 release:
-	docker buildx build --push --platform linux/arm64,linux/amd64 -f Dockerfile.release -t ghcr.io/quickdocs/dist-updater .
+	docker build -t ghcr.io/quickdocs/dist-updater -f Dockerfile.release .
+
+.PHONY: publish
+publish:
+	docker push ghcr.io/quickdocs/dist-updater
 
 .PHONY: run
 run:
