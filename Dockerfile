@@ -4,7 +4,7 @@ WORKDIR /app
 
 ADD https://beta.quicklisp.org/quicklisp.lisp /root/quicklisp.lisp
 RUN set -x; \
-  sbcl --load /root/quicklisp.lisp \
+  sbcl --noinform --non-interactive --load /root/quicklisp.lisp \
     --eval '(quicklisp-quickstart:install)' \
     --eval '(ql:uninstall-dist "quicklisp")' \
     --eval "(ql-dist:install-dist \"http://beta.quicklisp.org/dist/quicklisp.txt\" :prompt nil)" \
