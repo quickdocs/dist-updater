@@ -15,10 +15,6 @@ endif
 build:
 	docker build -t quickdocs-dist-updater -f Dockerfile .
 
-.PHONY: release
-release:
-	docker buildx build --push --platform linux/arm64,linux/amd64 -f Dockerfile.release -t ghcr.io/quickdocs/dist-updater .
-
 .PHONY: run
 run:
 	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) \
