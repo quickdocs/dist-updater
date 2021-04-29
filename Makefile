@@ -18,6 +18,9 @@ build:
 .PHONY: release
 release:
 	docker build -t ghcr.io/quickdocs/dist-updater -f Dockerfile.release .
+
+.PHONY: publish
+publish:
 	docker push ghcr.io/quickdocs/dist-updater
 
 .PHONY: run

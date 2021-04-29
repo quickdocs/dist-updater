@@ -14,5 +14,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
-      - name: Build and publish
+      - name: Build
         run: make release
+      - name: Publish
+        if: github.ref == 'refs/heads/master'
+        run: make publish
