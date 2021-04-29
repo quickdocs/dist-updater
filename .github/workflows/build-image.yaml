@@ -27,6 +27,6 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.release
-          platforms: linux/arm64,linux/amd64
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/quickdocs/dist-updater
