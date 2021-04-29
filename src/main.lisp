@@ -9,7 +9,11 @@
   (:import-from #:mito)
   (:import-from #:sxql
                 #:where)
-  (:export #:main))
+  (:export #:main
+           #:update
+           #:setup
+           #:migrate
+           #:help))
 (in-package #:dist-updater/main)
 
 (defparameter *info-json-url*
@@ -84,13 +88,24 @@
       (mito:delete-dao system))
     (mito:delete-dao release)))
 
-(defun main (dist-version &rest connect-args)
+(defun connection-arguments ()
+  (list :host (or (uiop:getenv "DB_HOST") "localhost")
+        :port (parse-integer (or (uiop:getenv "DB_PORT") "5432"))
+        :database-name (or (uiop:getenv "DB_NAME") "quickdocs")
+        :username (or (uiop:getenv "DB_USERNAME") "quickdocs")
+        :password (or (uiop:getenv "DB_PASSWORD") "quickdocs")))
+
+;;
+;; Commands
+
+(defun update (dist-version)
   (unless (and (stringp dist-version)
                (not (uiop:emptyp dist-version)))
     (format *error-output* "~&The dist version is required.~%")
     (uiop:quit -1))
 
-  (let ((mito:*connection* (apply #'dbi:connect :postgres connect-args)))
+  (let ((mito:*connection* (apply #'dbi:connect :postgres
+                                  (connection-arguments))))
     (unwind-protect
         (dbi:with-transaction mito:*connection*
           (let ((dist (find-dist dist-version)))
@@ -100,6 +115,43 @@
             (fetch-and-create-release-db dist)
             (create-all-systems-db)))
       (dbi:disconnect mito:*connection*))))
+
+(defun migrate ()
+  (let ((mito:*connection* (apply #'dbi:connect :postgres
+                                  (connection-arguments))))
+    (unwind-protect
+        (mito:migrate #P"db/")
+      (dbi:disconnect mito:*connection*))))
+
+(defun setup () (migrate))
+
+(defun help ()
+  (format *error-output*
+          "~&Usage: dist-updater COMMAND [ARGUMENTS...]
+
+COMMAND:
+  update [dist-version]
+    Update (or create) a dist data with GCS files.
+
+  setup | migrate
+    Initialize the database. If the tables already exist, run migrations if any available.
+"))
+
+;;
+;; Main
+(defun main ()
+  (destructuring-bind ($0 &optional (subcommand "help") &rest args)
+      sb-ext:*posix-argv*
+    (declare (ignore $0))
+    (cond
+      ((string= subcommand "update")
+       (update (first args)))
+      ((string= subcommand "setup")
+       (setup))
+      ((string= subcommand "migrate")
+       (migrate))
+      (t
+       (help)))))
 
 ;;; test
 (defmacro assert* (form)
