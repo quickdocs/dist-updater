@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
+docker buildx create --use --driver docker-container
+docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile.release -t quickdocs/dist-updater . --push
