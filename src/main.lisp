@@ -131,10 +131,13 @@
 
 COMMAND:
   update [dist-version]
-    Update (or create) a dist data with GCS files.
+    Update (or create) dist data with GCS files.
 
   setup | migrate
     Initialize the database. If the tables already exist, run migrations if any available.
+
+  help
+    Show this message.
 "))
 
 ;;
