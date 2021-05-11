@@ -1,3 +1,12 @@
+DROP TABLE "metadata_defsystem_depends_on";
+DROP TABLE "metadata_depends_on";
+DROP TABLE "metadata_weakly_depends_on";
+DROP TABLE "system_metadata";
+DROP TABLE "readme_file";
+DROP TABLE "system";
+DROP TABLE "release";
+DROP TABLE "dist";
+
 CREATE TABLE "dist" (
     "id" BIGSERIAL NOT NULL PRIMARY KEY,
     "name" VARCHAR(32) NOT NULL,
@@ -46,7 +55,7 @@ CREATE TABLE "system" (
     "license" TEXT,
     "homepage" TEXT,
     "bug_tracker" TEXT,
-    "source_control_url" TEXT,
+    "source_control" TEXT[],
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
@@ -73,8 +82,3 @@ CREATE TABLE "readme_file" (
     "updated_at" TIMESTAMPTZ
 );
 CREATE UNIQUE INDEX "unique_readme_file_release_id_filename" ON "readme_file" ("release_id", "filename");
-
-CREATE TABLE IF NOT EXISTS "schema_migrations" (
-    "version" VARCHAR(255) PRIMARY KEY,
-    "applied_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);

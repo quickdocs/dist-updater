@@ -3,9 +3,7 @@
   (:import-from #:cl-dbi
                 #:connect
                 #:disconnect)
-  (:import-from #:mito
-                #:*connection*
-                #:migrate)
+  (:import-from #:mito)
   (:export #:migrate
            #:with-connection))
 (in-package #:dist-updater/db)

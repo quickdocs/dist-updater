@@ -1,59 +1,141 @@
 (defpackage #:dist-updater/loader
   (:use #:cl
-        #:alexandria
-        #:dist-updater/utils/fetch
-        #:dist-updater/utils/json-db-class
-        #:dist-updater/db-classes)
+        #:alexandria)
+  (:import-from #:dist-updater/models
+                #:dist
+                #:dist-name
+                #:dist-version
+                #:dist-provided-releases-count
+                #:release
+                #:readme-file
+                #:system
+                #:system-dependency)
   (:import-from #:dist-updater/db
                 #:with-connection)
   (:import-from #:cl-dbi)
   (:import-from #:mito)
   (:import-from #:sxql
                 #:where)
+  (:import-from #:dexador)
   (:import-from #:yason)
   (:export #:load-json))
 (in-package #:dist-updater/loader)
 
+(defun fetch-json (url)
+  (yason:parse (dex:get url)))
+
+(defgeneric create-from-hash (class data &key)
+  (:method :before (class data &key)
+    (check-type data hash-table)))
+
+(defmethod create-from-hash ((class (eql 'dist)) data &key)
+  (let ((provided-releases-url (gethash "provided_releases_url" data)))
+    (let ((dist
+            (mito:create-dao class
+                             :name (gethash "name" data)
+                             :version (gethash "version" data)
+                             :system-index-url (gethash "system_index_url" data)
+                             :release-index-url (gethash "release_index_url" data)
+                             :archive-base-url (gethash "archive_base_url" data)
+                             :distinfo-subscription-url (gethash "distinfo_subscription_url" data)
+                             :canonical-distinfo-url (gethash "canonical_distinfo_url" data)
+                             :provided-releases-count (gethash "provided_releases_count" data)
+                             :provided-releases-url provided-releases-url
+                             :extract-errors-url (gethash "extract_errors_url" data)))
+          (releases (fetch-json provided-releases-url)))
+      (loop for name being the hash-keys of releases
+            using (hash-value release-url)
+            for progress from 1
+            for release = (fetch-json release-url)
+            do (create-from-hash 'release release
+                                 :dist dist
+                                 :progress progress)))))
+
+(defmethod create-from-hash ((class (eql 'release)) data &key dist progress)
+  (format t "~&[~D / ~D] ~A~%"
+          progress
+          (dist-provided-releases-count dist)
+          (gethash "project_name" data))
+  (let* ((systems-metadata-url (gethash "systems_metadata_url" data))
+         (readme-url (gethash "readme_url" data))
+         (release (mito:create-dao class
+                                   :dist dist
+                                   :name (gethash "project_name" data)
+                                   :archive-url (gethash "archive_url" data)
+                                   :archive-size (gethash "archive_size" data)
+                                   :archive-content-sha1 (gethash "archive_content_sha1" data)
+                                   :prefix (gethash "prefix" data)
+                                   :systems-metadata-url systems-metadata-url
+                                   :readme-url readme-url
+                                   :upstream-url (gethash "upstream_url" data))))
+    (let ((systems-metadata (fetch-json systems-metadata-url)))
+      (maphash (lambda (name metadata)
+                 (declare (ignore name))
+                 (create-from-hash 'system metadata
+                                   :release release))
+               systems-metadata))
+    (let ((readme-data (fetch-json readme-url)))
+      (dolist (readme-file (gethash "readme_files" readme-data))
+        (create-from-hash 'readme-file readme-file
+                          :release release)))))
+
+(defmethod create-from-hash ((class (eql 'readme-file)) data &key release)
+  (mito:create-dao class
+                   :release release
+                   :filename (gethash "filename" data)
+                   :content (gethash "content" data)))
+
+(defmethod create-from-hash ((class (eql 'system)) data &key release)
+  (let ((metadata (or (gethash "metadata" data)
+                      (make-hash-table))))
+    (let ((system
+            (mito:create-dao class
+                             :release release
+                             :name (gethash "name" data)
+                             :filename (gethash "system_file_name" data)
+                             :long-name (gethash "long_name" metadata)
+                             :version (gethash "version" metadata)
+                             :description (gethash "description" metadata)
+                             :long-description (gethash "long_description" metadata)
+                             :authors (coerce (gethash "authors" metadata) 'vector)
+                             :maintainers (coerce (gethash "maintainers" metadata) 'vector)
+                             :mailto (gethash "mailto" metadata)
+                             :license (gethash "license" metadata)
+                             :homepage (gethash "homepage" metadata)
+                             :bug-tracker (gethash "bug_tracker" metadata)
+                             :source-control-url (second (gethash "source_control" metadata)))))
+      (loop for (type dependencies) on (list "defsystem" (gethash "defsystem_depends_on" metadata)
+                                             "normal"    (gethash "depends_on" metadata)
+                                             "weakly"    (gethash "weakly_depends_on" metadata)) by #'cddr
+            for unique-dependencies = (remove-duplicates dependencies
+                                                         :test #'equal
+                                                         :key (lambda (v) (gethash "name" v))
+                                                         :from-end t)
+            do (dolist (dependency unique-dependencies)
+                 (create-from-hash 'system-dependency dependency
+                                   :system system
+                                   :type type))))))
+
+(defmethod create-from-hash ((class (eql 'system-dependency)) data &key system type)
+  (mito:create-dao class
+                   :system system
+                   :type type
+                   :name (gethash "name" data)
+                   :version (gethash "version" data)
+                   :feature (prin1-to-string (gethash "feature" data))))
+
+(defparameter *dist-info-url-template*
+  "https://storage.googleapis.com/quickdocs-dist/~A/~A/info.json")
 (defparameter *releases-json-url-template*
-  "https://storage.googleapis.com/quickdocs-dist/quicklisp/~A/releases.json")
+  "https://storage.googleapis.com/quickdocs-dist/~A/~A/releases.json")
+
+(defun dist-info-url (name dist-version)
+  (format nil *dist-info-url-template* name dist-version))
 
 (defun releases-json-url (dist)
-  (format nil *releases-json-url-template* (dist-version dist)))
-
-(defun fetch-and-create-release-db (dist)
-  (maphash (lambda (name url)
-             (format t "~&fetch ~A, ~A~&" name url)
-             (when-let ((release-json (yason:parse (fetch url))))
-               (setf (gethash "dist" release-json) dist)
-               (let ((release (convert-json 'release release-json)))
-                 (when-let* ((json-string (fetch (release-readme-url release)))
-                             (readme-json (unless (emptyp json-string)
-                                            (yason:parse json-string))))
-                   (dolist (readme-file-json (gethash "readme_files" readme-json))
-                     (setf (gethash "release" readme-file-json) release)
-                     (convert-json 'readme-file readme-file-json))))))
-           (yason:parse (fetch (releases-json-url dist)))))
-
-(defun create-system-db (release systems-json)
-  (let ((systems '()))
-    (maphash (lambda (system-name system-json)
-               (declare (ignore system-name))
-               (setf (gethash "release" system-json) release)
-               (push (convert-json 'system system-json)
-                     systems))
-             systems-json)
-    systems))
-
-(defun create-all-systems-db ()
-  (loop :with releases := (mito:select-dao 'release)
-        :with all-nums := (length releases)
-        :for release :in releases
-        :for progress :from 0
-        :do (format t "~&~A ~50T ~D/~D~&" (release-project-name release) progress all-nums)
-        :do (let* ((url (release-systems-metadata-url release))
-                   (json (yason:parse (fetch url)))
-                   (systems (create-system-db release json)))
-              (validate json systems))))
+  (format nil *releases-json-url-template*
+          (dist-name dist)
+          (dist-version dist)))
 
 (defun find-dist (dist-version &key (name "quicklisp"))
   (mito:find-dao 'dist
@@ -61,23 +143,20 @@
                  :version dist-version))
 
 (defun create-dist (dist-version &key (name "quicklisp"))
-  (mito:create-dao 'dist
-                   :name "quicklisp"
-                   :version dist-version))
+  (let ((data (fetch-json (dist-info-url name dist-version))))
+    (create-from-hash 'dist data)))
 
-(defun delete-dist-data (dist)
+(defun delete-dist (dist)
   (dolist (release (mito:select-dao 'release
                      (where (:= :dist dist))))
     (dolist (system (mito:select-dao 'system
                       (where (:= :release release))))
-      (when-let ((metadata (system-metadata system)))
-        (mapc #'mito:delete-dao
-              (append (system-metadata-defsystem-depends-on metadata)
-                      (system-metadata-depends-on metadata)
-                      (system-metadata-weakly-depends-on metadata)))
-        (mito:delete-dao metadata))
+      (mapc #'mito:delete-dao
+            (mito:select-dao 'system-dependency
+              (where (:= :system system))))
       (mito:delete-dao system))
-    (mito:delete-dao release)))
+    (mito:delete-dao release))
+  (mito:delete-dao dist))
 
 (defun load-json (dist-version)
   (check-type dist-version string)
@@ -85,74 +164,6 @@
   (with-connection
     (dbi:with-transaction mito:*connection*
       (let ((dist (find-dist dist-version)))
-        (if dist
-            (delete-dist-data dist)
-            (setf dist (create-dist dist-version)))
-        (fetch-and-create-release-db dist)
-        (create-all-systems-db)))))
-
-;;; test
-(defmacro assert* (form)
-  `(with-simple-restart (continue "ignore") (assert ,form)))
-
-(defun validate (json systems)
-  (dolist (system systems)
-    (let ((json (gethash (system-name system) json))
-          (system (mito:find-dao 'system :id (mito:object-id system))))
-      (assert* (equal (gethash "name" json)
-                      (system-name system)))
-      (assert* (equal (gethash "system_file_name" json)
-                      (system-system-file-name system)))
-      (assert* (equal (gethash "required_systems" json)
-                      (coerce (system-required-systems system) 'list)))
-      (let ((json (gethash "metadata" json))
-            (metadata (system-metadata system)))
-        (unless (and (null json) (null metadata))
-          (assert* (equal (gethash "name" json)
-                          (system-metadata-name metadata)))
-          (assert* (equal (gethash "long_name" json)
-                          (system-metadata-long-name metadata)))
-          (assert* (equal (gethash "version" json)
-                          (system-metadata-version metadata)))
-          (assert* (equal (let ((val (gethash "description" json)))
-                            (if (consp val)
-                                (first val)
-                                val))
-                          (system-metadata-description metadata)))
-          (assert* (equal (gethash "long_description" json)
-                          (system-metadata-long-description metadata)))
-          (assert* (equalp (coerce (ensure-list (gethash "author" json)) 'vector)
-                           (coerce (system-metadata-author metadata) 'vector)))
-          (assert* (equalp (dist-updater/db-classes::normalize-array (gethash "maintainer" json))
-                           (coerce (system-metadata-maintainer metadata) 'vector)))
-          (assert* (equal (gethash "mailto" json)
-                          (system-metadata-mailto metadata)))
-          (assert* (equal (gethash "license" json)
-                          (system-metadata-license metadata)))
-          (assert* (equal (gethash "homepage" json)
-                          (system-metadata-homepage metadata)))
-          (assert* (equal (gethash "bug_tracker" json)
-                          (system-metadata-bug-tracker metadata)))
-          (assert* (and (or (null (first (ensure-list (gethash "source_control" json))))
-                            (equal (first (ensure-list (gethash "source_control" json)))
-                                   (first (coerce (system-metadata-source-control metadata) 'list))))
-                        (equal (second (ensure-list (gethash "source_control" json)))
-                               (second (coerce (system-metadata-source-control metadata) 'list)))))
-          (flet ((validate-depends-on (json-list depends-on-list)
-                   (assert* (= (length json-list)
-                               (length depends-on-list)))
-                   (set-equal (mapcar (lambda (json) (gethash "name" json)) json-list)
-                              (mapcar #'abstract-metadata-depends-on-name depends-on-list)
-                              :test #'equal)
-                   (set-equal (mapcar (lambda (json) (gethash "version" json)) json-list)
-                              (mapcar #'abstract-metadata-depends-on-version depends-on-list)
-                              :test #'equal)
-                   (set-equal (mapcar (lambda (json) (gethash "feature" json)) json-list)
-                              (mapcar #'abstract-metadata-depends-on-feature depends-on-list)
-                              :test #'equal)))
-            (validate-depends-on (gethash "defsystem_depends_on" json)
-                                 (system-metadata-defsystem-depends-on metadata))
-            (validate-depends-on (gethash "depends_on" json)
-                                 (system-metadata-depends-on metadata))
-            (validate-depends-on (gethash "weakly_depends_on" json)
-                                 (system-metadata-weakly-depends-on metadata))))))))
+        (when dist
+          (delete-dist dist)))
+      (create-dist dist-version))))
