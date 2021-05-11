@@ -4,7 +4,7 @@
   :pathname "src")
 
 (defsystem "dist-updater/command"
-  :depends-on ("dist-updater")
+  :depends-on ("dist-updater/command")
   :build-operation "program-op"
   :build-pathname "dist-updater"
-  :entry-point "dist-updater::main")
+  :entry-point "dist-updater/command::main")

@@ -15,6 +15,6 @@ if [ -f "./dist-updater" ]; then
   ./dist-updater "$subcommand" "$@"
 else
   sbcl --noinform --non-interactive \
-    --eval '(progn (format *error-output* "~&Loading...~%") (ql:quickload :dist-updater :silent t))' \
-    --eval "(let ((sb-ext:*posix-argv* (list \"\" \"$subcommand\" \"$@\"))) (dist-updater:main))"
+    --eval '(progn (format *error-output* "~&Loading...~%") (ql:quickload :dist-updater/command :silent t))' \
+    --eval "(let ((sb-ext:*posix-argv* (list \"\" \"$subcommand\" \"$@\"))) (dist-updater/command:main))"
 fi
