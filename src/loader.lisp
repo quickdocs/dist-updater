@@ -14,8 +14,11 @@
   (:export #:load-json))
 (in-package #:dist-updater/loader)
 
-(defparameter *releases-json-url*
-  "https://storage.googleapis.com/quickdocs-dist/quicklisp/2021-02-28/releases.json")
+(defparameter *releases-json-url-template*
+  "https://storage.googleapis.com/quickdocs-dist/quicklisp/~A/releases.json")
+
+(defun releases-json-url (dist)
+  (format nil *releases-json-url-template* (dist-version dist)))
 
 (defun fetch-and-create-release-db (dist)
   (maphash (lambda (name url)
@@ -29,7 +32,7 @@
                    (dolist (readme-file-json (gethash "readme_files" readme-json))
                      (setf (gethash "release" readme-file-json) release)
                      (convert-json 'readme-file readme-file-json))))))
-           (yason:parse (fetch *releases-json-url*))))
+           (yason:parse (fetch (releases-json-url dist)))))
 
 (defun create-system-db (release systems-json)
   (let ((systems '()))
