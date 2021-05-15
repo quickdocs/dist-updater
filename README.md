@@ -35,4 +35,8 @@ $ make build
 # Run 'update' process (default dist version is latest one)
 $ make update
 $ make update version=2021-02-28
+
+# Run tests
+$ make build_test
+$ make test
 ```

@@ -13,18 +13,22 @@ endif
 
 .PHONY: build
 build:
-	docker build -t quickdocs-dist-updater -f Dockerfile .
+	docker build -t quickdocs/dist-updater-dev -f Dockerfile .
+
+.PHONY: build_test
+build_test: build
+	docker build -t quickdocs/dist-updater-test -f Dockerfile.test .
 
 .PHONY: update
 update:
 	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) \
 		-e DB_HOST=$(DB_HOST) -e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) -e DB_USERNAME=$(DB_USERNAME) -e DB_PASSWORD=$(DB_PASSWORD) \
-		quickdocs-dist-updater update $(version)
+		quickdocs/dist-updater-dev update $(version)
 
 .PHONY: generate-migrations
 generate-migrations:
-	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) --entrypoint sbcl quickdocs-dist-updater \
+	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) --entrypoint sbcl quickdocs/dist-updater-dev \
 		--noinform --non-interactive \
 		--eval '(ql:quickload :dist-updater)' \
 		--eval '(mito:connect-toplevel :postgres :database-name "$(DB_NAME)" :host "$(DB_HOST)" :port $(DB_PORT) :username "$(DB_USERNAME)" :password "$(DB_PASSWORD)")' \
@@ -35,4 +39,8 @@ migrate:
 	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) \
 		-e DB_HOST=$(DB_HOST) -e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) -e DB_USERNAME=$(DB_USERNAME) -e DB_PASSWORD=$(DB_PASSWORD) \
-		quickdocs-dist-updater migrate
+		quickdocs/dist-updater-dev migrate
+
+.PHONY: test
+test:
+	docker run --rm -it -v ${PWD}:/app quickdocs/dist-updater-test
