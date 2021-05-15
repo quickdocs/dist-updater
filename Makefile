@@ -56,8 +56,9 @@ testdb:
 	$(MAKE) migrate NETWORK=quickdocs_dist_updater_test DB_HOST=quickdocs-dist-updater-testdb
 
 .PHONY: test_network
+test_network:
 	docker network inspect quickdocs_dist_updater_test >/dev/null 2>&1 || \
 		docker network create --driver bridge quickdocs_dist_updater_test 2>/dev/null
 
 test_cleanup = docker inspect --type=container --format '{{json .Id}}' quickdocs-dist-updater-testdb >/dev/null 2>&1 && \
-		(docker kill quickdocs-dist-updater-testdb >/dev/null && docker rm -v quickdocs-dist-updater-testdb >/dev/null) || true
+		(docker kill quickdocs-dist-updater-testdb >/dev/null; docker rm -v quickdocs-dist-updater-testdb >/dev/null) || true
