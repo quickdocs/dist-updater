@@ -42,5 +42,21 @@ migrate:
 		quickdocs/dist-updater-dev migrate
 
 .PHONY: test
-test:
-	docker run --rm -it -v ${PWD}:/app quickdocs/dist-updater-test
+test: test_network testdb
+	docker run --rm -it --network quickdocs_dist_updater_test -v ${PWD}:/app quickdocs/dist-updater-test
+	$(test_cleanup)
+
+.PHONY: testdb
+testdb:
+	$(test_cleanup)
+	docker run -d --name quickdocs-dist-updater-testdb \
+		--network quickdocs_dist_updater_test \
+		-e POSTGRES_DB=quickdocs -e POSTGRES_USER=quickdocs -e POSTGRES_PASSWORD=quickdocs \
+		postgres:10.1
+
+.PHONY: test_network
+	docker network inspect quickdocs_dist_updater_test >/dev/null 2>&1 || \
+		docker network create --driver bridge quickdocs_dist_updater_test 2>/dev/null
+
+test_cleanup = docker inspect --type=container --format '{{json .Id}}' quickdocs-dist-updater-testdb >/dev/null 2>&1 && \
+		(docker kill quickdocs-dist-updater-testdb >/dev/null && docker rm -v quickdocs-dist-updater-testdb >/dev/null) || true
