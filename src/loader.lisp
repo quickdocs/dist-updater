@@ -18,11 +18,16 @@
                 #:where)
   (:import-from #:dexador)
   (:import-from #:yason)
-  (:export #:load-json))
+  (:export #:latest-dist-version
+           #:load-json))
 (in-package #:dist-updater/loader)
 
 (defun fetch-json (url)
   (yason:parse (dex:get url)))
+
+(defun latest-dist-version ()
+  (let ((dist-info (fetch-json "http://storage.googleapis.com/quickdocs-dist/quicklisp/info.json")))
+    (gethash "latest_version" dist-info)))
 
 (defgeneric create-from-hash (class data &key)
   (:method :before (class data &key)

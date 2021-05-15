@@ -53,6 +53,7 @@ testdb:
 		--network quickdocs_dist_updater_test \
 		-e POSTGRES_DB=quickdocs -e POSTGRES_USER=quickdocs -e POSTGRES_PASSWORD=quickdocs \
 		postgres:10.1
+	$(MAKE) migrate NETWORK=quickdocs_dist_updater_test DB_HOST=quickdocs-dist-updater-testdb
 
 .PHONY: test_network
 	docker network inspect quickdocs_dist_updater_test >/dev/null 2>&1 || \
