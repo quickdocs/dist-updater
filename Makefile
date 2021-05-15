@@ -36,7 +36,7 @@ generate-migrations:
 
 .PHONY: migrate
 migrate:
-	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) \
+	docker run --rm -i -v ${PWD}:/app --net=$(NETWORK) \
 		-e DB_HOST=$(DB_HOST) -e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) -e DB_USERNAME=$(DB_USERNAME) -e DB_PASSWORD=$(DB_PASSWORD) \
 		quickdocs/dist-updater-dev migrate
