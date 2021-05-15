@@ -43,7 +43,7 @@ migrate:
 
 .PHONY: test
 test: test_network testdb
-	docker run --rm -it --network quickdocs_dist_updater_test -v ${PWD}:/app quickdocs/dist-updater-test
+	docker run --rm -i --network quickdocs_dist_updater_test -v ${PWD}:/app quickdocs/dist-updater-test
 	$(test_cleanup)
 
 .PHONY: testdb
