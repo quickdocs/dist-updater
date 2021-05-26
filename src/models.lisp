@@ -98,7 +98,7 @@
 
 (deftable system-dependency ()
   ((system :col-type system)
-   (type :col-type (:varchar 12)) ;; one of 'normal', 'weekly' or 'defsystem'
+   (type :col-type (:varchar 12)) ;; one of 'normal', 'weakly' or 'defsystem'
    (name :col-type (:varchar 64))
    (version :col-type (or :null :text))
    (feature :col-type (or :null :text)))
