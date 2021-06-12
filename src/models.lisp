@@ -39,13 +39,20 @@
            #:system-version
            #:system-description
            #:system-long-description
-           #:system-author
-           #:system-maintainer
+           #:system-authors
+           #:system-maintainers
            #:system-mailto
            #:system-license
            #:system-homepage
            #:system-bug-tracker
-           #:system-source-control-url))
+           #:system-source-control-url
+
+           #:system-dependency
+           #:system-dependency-system
+           #:system-dependency-name
+           #:system-dependency-type
+           #:system-dependency-version
+           #:system-dependency-feature))
 (in-package #:dist-updater/models)
 
 (deftable dist ()
