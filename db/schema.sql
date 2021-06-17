@@ -1,23 +1,7 @@
-CREATE TABLE "dist" (
-    "id" BIGSERIAL NOT NULL PRIMARY KEY,
-    "name" VARCHAR(32) NOT NULL,
-    "version" CHAR(10) NOT NULL,
-    "system_index_url" VARCHAR(128) NOT NULL,
-    "release_index_url" VARCHAR(128) NOT NULL,
-    "archive_base_url" VARCHAR(128) NOT NULL,
-    "distinfo_subscription_url" VARCHAR(128) NOT NULL,
-    "canonical_distinfo_url" VARCHAR(128) NOT NULL,
-    "provided_releases_count" INTEGER NOT NULL,
-    "provided_releases_url" VARCHAR(128) NOT NULL,
-    "extract_errors_url" VARCHAR(128) NOT NULL,
-    "created_at" TIMESTAMPTZ,
-    "updated_at" TIMESTAMPTZ
-);
-CREATE UNIQUE INDEX "unique_dist_name_version" ON "dist" ("name", "version");
-
 CREATE TABLE "release" (
     "id" BIGSERIAL NOT NULL PRIMARY KEY,
-    "dist_id" BIGINT NOT NULL,
+    "dist_name" VARCHAR(32) NOT NULL,
+    "dist_version" CHAR(10) NOT NULL,
     "name" VARCHAR(64) NOT NULL,
     "archive_url" TEXT NOT NULL,
     "archive_size" INTEGER NOT NULL,
@@ -29,14 +13,14 @@ CREATE TABLE "release" (
     "created_at" TIMESTAMPTZ,
     "updated_at" TIMESTAMPTZ
 );
-CREATE UNIQUE INDEX "unique_release_dist_id_name" ON "release" ("dist_id", "name");
+CREATE UNIQUE INDEX "unique_release_dist_name_dist_version_name" ON "release" ("dist_name", "dist_version", "name");
 
 CREATE TABLE "system" (
     "id" BIGSERIAL NOT NULL PRIMARY KEY,
     "release_id" BIGINT NOT NULL,
     "name" VARCHAR(64) NOT NULL,
-    "long_name" TEXT,
     "filename" VARCHAR(80) NOT NULL,
+    "long_name" TEXT,
     "version" TEXT,
     "description" TEXT,
     "long_description" TEXT,
@@ -73,6 +57,29 @@ CREATE TABLE "readme_file" (
     "updated_at" TIMESTAMPTZ
 );
 CREATE UNIQUE INDEX "unique_readme_file_release_id_filename" ON "readme_file" ("release_id", "filename");
+
+CREATE TABLE "dist" (
+    "id" BIGSERIAL NOT NULL PRIMARY KEY,
+    "name" VARCHAR(32) NOT NULL,
+    "version" CHAR(10) NOT NULL,
+    "system_index_url" VARCHAR(128) NOT NULL,
+    "release_index_url" VARCHAR(128) NOT NULL,
+    "archive_base_url" VARCHAR(128) NOT NULL,
+    "distinfo_subscription_url" VARCHAR(128) NOT NULL,
+    "canonical_distinfo_url" VARCHAR(128) NOT NULL,
+    "provided_releases_count" INTEGER NOT NULL,
+    "provided_releases_url" VARCHAR(128) NOT NULL,
+    "extract_errors_url" VARCHAR(128) NOT NULL,
+    "created_at" TIMESTAMPTZ,
+    "updated_at" TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX "unique_dist_name_version" ON "dist" ("name", "version");
+
+CREATE TABLE "dist_release" (
+    "dist_id" BIGINT NOT NULL,
+    "release_id" BIGINT NOT NULL,
+    PRIMARY KEY ("dist_id", "release_id")
+);
 
 CREATE TABLE IF NOT EXISTS "schema_migrations" (
     "version" VARCHAR(255) PRIMARY KEY,

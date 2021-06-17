@@ -6,6 +6,7 @@
                 #:dist-name
                 #:dist-version
                 #:dist-provided-releases-count
+                #:dist-release
                 #:release
                 #:readme-file
                 #:system
@@ -15,7 +16,9 @@
   (:import-from #:cl-dbi)
   (:import-from #:mito)
   (:import-from #:sxql
-                #:where)
+                #:where
+                #:left-join
+                #:limit)
   (:import-from #:dexador)
   (:import-from #:yason)
   (:export #:latest-dist-version
@@ -57,32 +60,59 @@
                                  :progress progress)))))
 
 (defmethod create-from-hash ((class (eql 'release)) data &key dist progress)
-  (format t "~&[~D / ~D] ~A~%"
+  (format t "~&[~D / ~D] ~A"
           progress
           (dist-provided-releases-count dist)
           (gethash "project_name" data))
-  (let* ((systems-metadata-url (gethash "systems_metadata_url" data))
+  (force-output)
+  (let* ((name (gethash "project_name" data))
+         (archive-url (gethash "archive_url" data))
+         (systems-metadata-url (gethash "systems_metadata_url" data))
          (readme-url (gethash "readme_url" data))
-         (release (mito:create-dao class
-                                   :dist dist
-                                   :name (gethash "project_name" data)
-                                   :archive-url (gethash "archive_url" data)
-                                   :archive-size (gethash "archive_size" data)
-                                   :archive-content-sha1 (gethash "archive_content_sha1" data)
-                                   :prefix (gethash "prefix" data)
-                                   :systems-metadata-url systems-metadata-url
-                                   :readme-url readme-url
-                                   :upstream-url (gethash "upstream_url" data))))
-    (let ((systems-metadata (fetch-json systems-metadata-url)))
-      (maphash (lambda (name metadata)
-                 (declare (ignore name))
-                 (create-from-hash 'system metadata
-                                   :release release))
-               systems-metadata))
-    (let ((readme-data (fetch-json readme-url)))
-      (dolist (readme-file (gethash "readme_files" readme-data))
-        (create-from-hash 'readme-file readme-file
-                          :release release)))))
+         (dist-version
+           (nth-value 1
+                      (ppcre:scan-to-strings "^http://beta\.quicklisp\.org/archive/[^/]+/([^/]+)" archive-url)))
+         (dist-version (and dist-version
+                            (aref dist-version 0)))
+         (release
+           (mito:find-dao class
+                          :dist-name (dist-name dist)
+                          :dist-version dist-version
+                          :name name))
+         (label (and (null release)
+                     (if (mito:find-dao class
+                                        :dist-name (dist-name dist)
+                                        :name name)
+                         "updated"
+                         "new"))))
+    (unless release
+      (format t " (~A)~%" label)
+      (setf release
+            (mito:create-dao class
+                             :dist-name (dist-name dist)
+                             :dist-version dist-version
+                             :name name
+                             :archive-url archive-url
+                             :archive-size (gethash "archive_size" data)
+                             :archive-content-sha1 (gethash "archive_content_sha1" data)
+                             :prefix (gethash "prefix" data)
+                             :systems-metadata-url systems-metadata-url
+                             :readme-url readme-url
+                             :upstream-url (gethash "upstream_url" data)))
+      (let ((systems-metadata (fetch-json systems-metadata-url)))
+        (maphash (lambda (name metadata)
+                   (declare (ignore name))
+                   (create-from-hash 'system metadata
+                                     :release release))
+                 systems-metadata))
+      (let ((readme-data (fetch-json readme-url)))
+        (dolist (readme-file (gethash "readme_files" readme-data))
+          (create-from-hash 'readme-file readme-file
+                            :release release))))
+    (fresh-line)
+    (mito:create-dao 'dist-release
+                     :dist dist
+                     :release release)))
 
 (defmethod create-from-hash ((class (eql 'readme-file)) data &key release)
   (mito:create-dao class
@@ -153,14 +183,19 @@
 
 (defun delete-dist (dist)
   (dolist (release (mito:select-dao 'release
-                     (where (:= :dist dist))))
-    (dolist (system (mito:select-dao 'system
-                      (where (:= :release release))))
-      (mapc #'mito:delete-dao
-            (mito:select-dao 'system-dependency
-              (where (:= :system system))))
-      (mito:delete-dao system))
-    (mito:delete-dao release))
+                     (left-join :dist_release :on (:= :dist_release.release_id :release.id))
+                     (where (:= :dist_release.dist_id (mito:object-id dist)))))
+    (unless (mito:select-dao 'dist-release
+              (where (:and (:= :release_id (mito:object-id release))
+                           (:!= :dist_id (mito:object-id dist))))
+              (limit 1))
+      (dolist (system (mito:select-dao 'system
+                        (where (:= :release release))))
+        (mapc #'mito:delete-dao
+              (mito:select-dao 'system-dependency
+                               (where (:= :system system))))
+        (mito:delete-dao system))
+      (mito:delete-dao release)))
   (mito:delete-dao dist))
 
 (defun load-json (dist-version)

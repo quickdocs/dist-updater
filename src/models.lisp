@@ -15,7 +15,8 @@
            #:dist-extract-errors-url
 
            #:release
-           #:release-dist
+           #:release-dist-name
+           #:release-dist-version
            #:release-name
            #:release-archive-url
            #:release-archive-size
@@ -24,6 +25,10 @@
            #:release-systems-metadata-url
            #:release-readme-url
            #:release-upstream-url
+
+           #:dist-release
+           #:dist-release-dist
+           #:dist-release-release
 
            #:readme-file
            #:readme-file-release
@@ -69,7 +74,8 @@
   (:unique-keys (name version)))
 
 (deftable release ()
-  ((dist :col-type dist)
+  ((dist-name :col-type (:varchar 32))
+   (dist-version :col-type (:char 10))
    (name :col-type (:varchar 64))
    (archive-url :col-type :text)
    (archive-size :col-type :integer)
@@ -78,7 +84,13 @@
    (systems-metadata-url :col-type :text)
    (readme-url :col-type :text)
    (upstream-url :col-type :text))
-  (:unique-keys (dist name)))
+  (:unique-keys (dist-name dist-version name)))
+
+(deftable dist-release ()
+  ((dist :col-type dist)
+   (release :col-type release))
+  (:primary-key dist release)
+  (:record-timestamps nil))
 
 (deftable readme-file ()
   ((release :col-type release)
