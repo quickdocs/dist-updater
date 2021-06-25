@@ -57,7 +57,12 @@
            #:system-dependency-name
            #:system-dependency-type
            #:system-dependency-version
-           #:system-dependency-feature))
+           #:system-dependency-feature
+
+           #:project-download-stats
+           #:project-download-stats-date
+           #:project-download-stats-download-count
+           #:project-download-stats-project-name))
 (in-package #:dist-updater/models)
 
 (deftable dist ()
@@ -122,3 +127,10 @@
    (version :col-type (or :null :text))
    (feature :col-type (or :null :text)))
   (:unique-keys (system type name)))
+
+(deftable project-download-stats ()
+  ((date :col-type :date)
+   (project-name :col-type (:varchar 64))
+   (download-count :col-type :integer))
+  (:unique-keys (project-name date))
+  (:keys (date download-count)))

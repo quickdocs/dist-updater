@@ -26,6 +26,13 @@ update:
 		-e DB_NAME=$(DB_NAME) -e DB_USERNAME=$(DB_USERNAME) -e DB_PASSWORD=$(DB_PASSWORD) \
 		quickdocs/dist-updater-dev update $(version)
 
+.PHONY: fetch
+fetch:
+	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) \
+		-e DB_HOST=$(DB_HOST) -e DB_PORT=$(DB_PORT) \
+		-e DB_NAME=$(DB_NAME) -e DB_USERNAME=$(DB_USERNAME) -e DB_PASSWORD=$(DB_PASSWORD) \
+		quickdocs/dist-updater-dev fetch $(resource)
+
 .PHONY: generate-migrations
 generate-migrations:
 	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) --entrypoint sbcl quickdocs/dist-updater-dev \

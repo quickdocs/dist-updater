@@ -2,6 +2,8 @@
   (:use #:cl)
   (:import-from #:dist-updater/loader
                 #:load-json)
+  (:import-from #:dist-updater/external/download-stats
+                #:load-download-stats)
   (:import-from #:dist-updater/db
                 #:migrate)
   (:export #:main))
@@ -16,6 +18,9 @@
 COMMAND:
   update [dist-version]
     Update (or create) dist data with GCS files.
+
+  fetch [external-data]
+    Fetch additional data from external resources.
 
   setup | migrate
     Initialize the database. If the tables already exist, run migrations if any available.
@@ -33,6 +38,23 @@ COMMAND:
   ;; For now, just download dist JSON and insert rows into DB
   (load-json dist-version))
 
+(defun fetch (external-data)
+  (unless (and (stringp external-data)
+               (member external-data
+                       '("download-stats")
+                       :test #'string=))
+    (format *error-output* "~&Unknown external resource: ~S~%" external-data)
+    (uiop:quit -1))
+  (cond
+    ((equal external-data "download-stats")
+     (load-download-stats))
+    ((null external-data)
+     (format *error-output* "~&External resource name is required.~%")
+     (uiop:quit -1))
+    (t
+     (format *error-output* "~&Unknown external resource: ~S~%" external-data)
+     (uiop:quit -1))))
+
 (defun main ()
   (destructuring-bind ($0 &optional (subcommand "help") &rest args)
       sb-ext:*posix-argv*
@@ -40,6 +62,8 @@ COMMAND:
     (cond
       ((string= subcommand "update")
        (update (first args)))
+      ((string= subcommand "fetch")
+       (fetch (first args)))
       ((string= subcommand "setup")
        (setup))
       ((string= subcommand "migrate")

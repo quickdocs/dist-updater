@@ -1,3 +1,14 @@
+CREATE TABLE "project_download_stats" (
+    "id" BIGSERIAL NOT NULL PRIMARY KEY,
+    "date" DATE NOT NULL,
+    "project_name" VARCHAR(64) NOT NULL,
+    "download_count" INTEGER NOT NULL,
+    "created_at" TIMESTAMPTZ,
+    "updated_at" TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX "unique_project_download_stats_project_name_date" ON "project_download_stats" ("project_name", "date");
+CREATE INDEX "key_project_download_stats_date_download_count" ON "project_download_stats" ("date", "download_count");
+
 CREATE TABLE "release" (
     "id" BIGSERIAL NOT NULL PRIMARY KEY,
     "dist_name" VARCHAR(32) NOT NULL,

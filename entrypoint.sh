@@ -1,7 +1,7 @@
 #!/bin/bash
 
 case $1 in
-  update|setup|migrate|help)
+  update|fetch|setup|migrate|help)
     subcommand=$1
     shift
     ;;
