@@ -61,8 +61,13 @@
 
            #:project-download-stats
            #:project-download-stats-date
+           #:project-download-stats-project-name
            #:project-download-stats-download-count
-           #:project-download-stats-project-name))
+
+           #:project-topic
+           #:project-topic-date
+           #:project-topic-project-name
+           #:project-topic-topic))
 (in-package #:dist-updater/models)
 
 (deftable dist ()
@@ -134,3 +139,10 @@
    (download-count :col-type :integer))
   (:unique-keys (project-name date))
   (:keys (date download-count)))
+
+(deftable project-topic ()
+  ((project-name :col-type (:varchar 64))
+   (topic :col-type (:varchar 64))
+   (date :col-type :date))
+  (:unique-keys (topic project-name))
+  (:keys (project-name date)))

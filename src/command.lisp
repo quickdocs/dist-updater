@@ -4,6 +4,8 @@
                 #:load-json)
   (:import-from #:dist-updater/external/download-stats
                 #:load-download-stats)
+  (:import-from #:dist-updater/external/topics
+                #:load-topics)
   (:import-from #:dist-updater/db
                 #:migrate)
   (:export #:main))
@@ -38,22 +40,22 @@ COMMAND:
   ;; For now, just download dist JSON and insert rows into DB
   (load-json dist-version))
 
+(defvar *external-resources*
+  '(("download-stats" . load-download-stats)
+    ("topics" . load-topics)))
+
 (defun fetch (external-data)
-  (unless (and (stringp external-data)
-               (member external-data
-                       '("download-stats")
-                       :test #'string=))
-    (format *error-output* "~&Unknown external resource: ~S~%" external-data)
+  (unless external-data
+    (format *error-output* "~&External resource name is required.~%")
     (uiop:quit -1))
-  (cond
-    ((equal external-data "download-stats")
-     (load-download-stats))
-    ((null external-data)
-     (format *error-output* "~&External resource name is required.~%")
-     (uiop:quit -1))
-    (t
-     (format *error-output* "~&Unknown external resource: ~S~%" external-data)
-     (uiop:quit -1))))
+
+  (let ((action (cdr (assoc external-data *external-resources*
+                            :test #'equal))))
+    (unless action
+      (format *error-output* "~&Unknown external resource: ~S~%" external-data)
+      (uiop:quit -1))
+
+    (funcall action)))
 
 (defun main ()
   (destructuring-bind ($0 &optional (subcommand "help") &rest args)
@@ -61,7 +63,8 @@ COMMAND:
     (declare (ignore $0))
     (cond
       ((string= subcommand "update")
-       (update (first args)))
+       (update (first args))
+       (mapc #'fetch *external-resources*))
       ((string= subcommand "fetch")
        (fetch (first args)))
       ((string= subcommand "setup")
