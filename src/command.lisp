@@ -1,7 +1,9 @@
 (defpackage #:dist-updater/command
   (:use #:cl)
   (:import-from #:dist-updater/loader
-                #:load-json)
+                #:load-json
+                #:latest-dist-version
+                #:not-supported-dist-version)
   (:import-from #:dist-updater/external/download-stats
                 #:load-download-stats)
   (:import-from #:dist-updater/external/topics
@@ -20,6 +22,7 @@
 COMMAND:
   update [dist-version]
     Update (or create) dist data with GCS files.
+    If dist-version is omitted, load the latest version by default.
 
   fetch [external-data]
     Fetch additional data from external resources.
@@ -32,13 +35,17 @@ COMMAND:
 "))
 
 (defun update (dist-version)
-  (unless (and (stringp dist-version)
-               (not (uiop:emptyp dist-version)))
-    (format *error-output* "~&The dist version is required.~%")
-    (uiop:quit -1))
+  (let ((dist-version
+          (if (and (stringp dist-version)
+                   (not (uiop:emptyp dist-version)))
+              dist-version
+              (latest-dist-version))))
 
-  ;; For now, just download dist JSON and insert rows into DB
-  (load-json dist-version))
+    (handler-case
+        (load-json dist-version)
+      (not-supported-dist-version (e)
+        (format *error-output* "~&~A~%" e)
+        (uiop:quit -1)))))
 
 (defvar *external-resources*
   '(("download-stats" . load-download-stats)

@@ -25,6 +25,14 @@
            #:load-json))
 (in-package #:dist-updater/loader)
 
+(define-condition not-supported-dist-version (error)
+  ((dist-name :initarg :dist-name)
+   (dist-version :initarg :dist-version))
+  (:report (lambda (condition stream)
+             (with-slots (dist-name dist-version) condition
+               (format stream "Not supported dist version: ~A (version=~A)"
+                       dist-name dist-version)))))
+
 (defun fetch-json (url)
   (yason:parse (dex:get url)))
 
@@ -178,7 +186,11 @@
                  :version dist-version))
 
 (defun create-dist (dist-version &key (name "quicklisp"))
-  (let ((data (fetch-json (dist-info-url name dist-version))))
+  (let ((data (handler-case (fetch-json (dist-info-url name dist-version))
+                (dex:http-request-not-found ()
+                  (error 'not-supported-dist-version
+                         :dist-name name
+                         :dist-version dist-version)))))
     (create-from-hash 'dist data)))
 
 (defun delete-dist (dist)
