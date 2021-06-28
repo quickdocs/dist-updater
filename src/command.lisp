@@ -71,7 +71,7 @@ COMMAND:
     (cond
       ((string= subcommand "update")
        (update (first args))
-       (mapc #'fetch *external-resources*))
+       (mapc #'fetch (mapcar #'first *external-resources*)))
       ((string= subcommand "fetch")
        (fetch (first args)))
       ((string= subcommand "setup")
