@@ -40,6 +40,7 @@ CREATE UNIQUE INDEX "unique_release_dist_name_dist_version_name" ON "release" ("
 CREATE TABLE "system" (
     "id" BIGSERIAL NOT NULL PRIMARY KEY,
     "release_id" BIGINT NOT NULL,
+    "is_primary" BOOLEAN NOT NULL,
     "name" VARCHAR(64) NOT NULL,
     "filename" VARCHAR(80) NOT NULL,
     "long_name" TEXT,
@@ -57,6 +58,7 @@ CREATE TABLE "system" (
     "updated_at" TIMESTAMPTZ
 );
 CREATE UNIQUE INDEX "unique_system_release_id_name" ON "system" ("release_id", "name");
+CREATE INDEX "key_system_release_id_is_primary" ON "system" ("release_id", "is_primary");
 
 CREATE TABLE "system_dependency" (
     "id" BIGSERIAL NOT NULL PRIMARY KEY,

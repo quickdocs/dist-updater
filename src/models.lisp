@@ -110,6 +110,8 @@
 
 (deftable system ()
   ((release :col-type release)
+   (is-primary :col-type :boolean
+               :initform nil)
    (name :col-type (:varchar 64))
    (filename :col-type (:varchar 80))
    (long-name :col-type (or :null :text))
@@ -123,7 +125,8 @@
    (homepage :col-type (or :null :text))
    (bug-tracker :col-type (or :null :text))
    (source-control-url :col-type (or :null :text)))
-  (:unique-keys (release name)))
+  (:unique-keys (release name))
+  (:keys (release is-primary)))
 
 (deftable system-dependency ()
   ((system :col-type system)

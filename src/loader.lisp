@@ -108,6 +108,19 @@
                              :readme-url readme-url
                              :upstream-url (gethash "upstream_url" data)))
       (let ((systems-metadata (fetch-json systems-metadata-url)))
+        (cond
+          ((gethash name systems-metadata)
+           (setf (gethash "is_primary" (gethash name systems-metadata)) t))
+          ((and (starts-with-subseq "cl-" name)
+                (gethash (subseq name 3) systems-metadata))
+           (setf (gethash "is_primary" (gethash (subseq name 3) systems-metadata)) t))
+          (t
+           (loop for system-name being the hash-keys of systems-metadata
+                 using (hash-value metadata)
+                 if (and (starts-with-subseq "cl-" system-name)
+                            (equal (subseq system-name 3) name))
+                 do (setf (gethash "is_primary" metadata) t)
+                    (return))))
         (maphash (lambda (name metadata)
                    (declare (ignore name))
                    (create-from-hash 'system metadata
@@ -134,6 +147,7 @@
     (let ((system
             (mito:create-dao class
                              :release release
+                             :is-primary (gethash "is_primary" data)
                              :name (gethash "name" data)
                              :filename (gethash "system_file_name" data)
                              :long-name (gethash "long_name" metadata)
