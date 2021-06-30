@@ -31,7 +31,9 @@
       (dbi:with-transaction mito:*connection*
         (loop for project-name being the hash-keys of project-topics
               using (hash-value topics)
-              do (dolist (topic topics)
+              do (mito:delete-by-values 'project-topic
+                                        :project-name project-name)
+                 (dolist (topic topics)
                    (mito:create-dao 'project-topic
                                     :date (gethash "version" info)
                                     :project-name project-name
