@@ -224,12 +224,18 @@
       (mito:delete-dao release)))
   (mito:delete-dao dist))
 
-(defun load-json (dist-version)
+(defun load-json (dist-version &key force)
   (check-type dist-version string)
 
   (with-connection
     (dbi:with-transaction mito:*connection*
       (let ((dist (find-dist dist-version)))
         (when dist
-          (delete-dist dist)))
-      (create-dist dist-version))))
+          (if force
+              (delete-dist dist)
+              (progn
+                (format t "~&Already have a dist version '~A'. Skipped.~%" dist-version)
+                (format t "~&Use --force option to overwrite it.~%")
+                (return-from load-json)))))
+      (create-dist dist-version)
+      (format t "~&A dist version '~A' is loaded.~%" dist-version))))
