@@ -75,7 +75,6 @@
   (force-output)
   (let* ((name (gethash "project_name" data))
          (archive-url (gethash "archive_url" data))
-         (systems-metadata-url (gethash "systems_metadata_url" data))
          (readme-url (gethash "readme_url" data))
          (dist-version
            (nth-value 1
@@ -104,28 +103,21 @@
                              :archive-size (gethash "archive_size" data)
                              :archive-content-sha1 (gethash "archive_content_sha1" data)
                              :prefix (gethash "prefix" data)
-                             :systems-metadata-url systems-metadata-url
                              :readme-url readme-url
                              :upstream-url (gethash "upstream_url" data)))
-      (let ((systems-metadata (fetch-json systems-metadata-url)))
-        (cond
-          ((gethash name systems-metadata)
-           (setf (gethash "is_primary" (gethash name systems-metadata)) t))
-          ((and (starts-with-subseq "cl-" name)
-                (gethash (subseq name 3) systems-metadata))
-           (setf (gethash "is_primary" (gethash (subseq name 3) systems-metadata)) t))
-          (t
-           (loop for system-name being the hash-keys of systems-metadata
-                 using (hash-value metadata)
-                 if (and (starts-with-subseq "cl-" system-name)
-                            (equal (subseq system-name 3) name))
-                 do (setf (gethash "is_primary" metadata) t)
-                    (return))))
-        (maphash (lambda (name metadata)
-                   (declare (ignore name))
-                   (create-from-hash 'system metadata
-                                     :release release))
-                 systems-metadata))
+      (let ((systems-metadata (gethash "systems" data)))
+        (block nil
+          (dolist (metadata systems-metadata)
+            (when (or (equal name (gethash "name" metadata))
+                      (and (starts-with-subseq "cl-" name)
+                           (equal (subseq name 3) (gethash "name" metadata)))
+                      (and (starts-with-subseq "cl-" (gethash "name" metadata))
+                           (equal (subseq (gethash "name" metadata) 3) name)))
+              (setf (gethash "is_primary" metadata) t)
+              (return))))
+        (dolist (metadata systems)
+          (create-from-hash 'system metadata
+                            :release release)))
       (let ((readme-data (fetch-json readme-url)))
         (dolist (readme-file (gethash "readme_files" readme-data))
           (create-from-hash 'readme-file readme-file
@@ -142,36 +134,34 @@
                    :content (gethash "content" data)))
 
 (defmethod create-from-hash ((class (eql 'system)) data &key release)
-  (let ((metadata (or (gethash "metadata" data)
-                      (make-hash-table))))
-    (let ((system
-            (mito:create-dao class
-                             :release release
-                             :is-primary (gethash "is_primary" data)
-                             :name (gethash "name" data)
-                             :filename (gethash "system_file_name" data)
-                             :long-name (gethash "long_name" metadata)
-                             :version (gethash "version" metadata)
-                             :description (gethash "description" metadata)
-                             :long-description (gethash "long_description" metadata)
-                             :authors (coerce (gethash "authors" metadata) 'vector)
-                             :maintainers (coerce (gethash "maintainers" metadata) 'vector)
-                             :mailto (gethash "mailto" metadata)
-                             :license (gethash "license" metadata)
-                             :homepage (gethash "homepage" metadata)
-                             :bug-tracker (gethash "bug_tracker" metadata)
-                             :source-control-url (second (gethash "source_control" metadata)))))
-      (loop for (type dependencies) on (list "defsystem" (gethash "defsystem_depends_on" metadata)
-                                             "normal"    (gethash "depends_on" metadata)
-                                             "weakly"    (gethash "weakly_depends_on" metadata)) by #'cddr
-            for unique-dependencies = (remove-duplicates dependencies
-                                                         :test #'equal
-                                                         :key (lambda (v) (gethash "name" v))
-                                                         :from-end t)
-            do (dolist (dependency unique-dependencies)
-                 (create-from-hash 'system-dependency dependency
-                                   :system system
-                                   :type type))))))
+  (let ((system
+          (mito:create-dao class
+                           :release release
+                           :is-primary (gethash "is_primary" data)
+                           :name (gethash "name" data)
+                           :filename (gethash "system_file_name" data)
+                           :long-name (gethash "long_name" data)
+                           :version (gethash "version" data)
+                           :description (gethash "description" data)
+                           :long-description (gethash "long_description" data)
+                           :authors (coerce (gethash "authors" data) 'vector)
+                           :maintainers (coerce (gethash "maintainers" data) 'vector)
+                           :mailto (gethash "mailto" data)
+                           :license (gethash "license" data)
+                           :homepage (gethash "homepage" data)
+                           :bug-tracker (gethash "bug_tracker" data)
+                           :source-control-url (second (gethash "source_control" data)))))
+    (loop for (type dependencies) on (list "defsystem" (gethash "defsystem_depends_on" data)
+                                           "normal"    (gethash "depends_on" data)
+                                           "weakly"    (gethash "weakly_depends_on" data)) by #'cddr
+          for unique-dependencies = (remove-duplicates dependencies
+                                                       :test #'equal
+                                                       :key (lambda (v) (gethash "name" v))
+                                                       :from-end t)
+          do (dolist (dependency unique-dependencies)
+               (create-from-hash 'system-dependency dependency
+                                 :system system
+                                 :type type)))))
 
 (defmethod create-from-hash ((class (eql 'system-dependency)) data &key system type)
   (mito:create-dao class
