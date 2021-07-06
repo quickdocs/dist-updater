@@ -42,7 +42,7 @@ CREATE TABLE "system" (
     "release_id" BIGINT NOT NULL,
     "is_primary" BOOLEAN NOT NULL,
     "name" VARCHAR(64) NOT NULL,
-    "filename" VARCHAR(80) NOT NULL,
+    "filename" VARCHAR(80),
     "long_name" TEXT,
     "version" TEXT,
     "description" TEXT,

@@ -113,7 +113,7 @@
    (is-primary :col-type :boolean
                :initform nil)
    (name :col-type (:varchar 64))
-   (filename :col-type (:varchar 80))
+   (filename :col-type (or (:varchar 80) :null))
    (long-name :col-type (or :null :text))
    (version :col-type (or :null :text))
    (description :col-type (or :null :text))
