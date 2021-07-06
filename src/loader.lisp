@@ -212,6 +212,7 @@
                                (where (:= :system system))))
         (mito:delete-dao system))
       (mito:delete-dao release)))
+  (mito:delete-by-values 'dist-release :dist dist)
   (mito:delete-dao dist))
 
 (defun load-json (dist-version &key force)
