@@ -179,7 +179,8 @@
                    :type type
                    :name (gethash "name" data)
                    :version (gethash "version" data)
-                   :feature (prin1-to-string (gethash "feature" data))))
+                   :feature (and (gethash "feature" data)
+                                 (prin1-to-string (gethash "feature" data)))))
 
 (defparameter *dist-info-url-template*
   "https://storage.googleapis.com/quickdocs-dist/~A/~A/info.json")
