@@ -12,9 +12,10 @@ esac
 
 # Use the binary if exists
 if [ -f "./dist-updater" ]; then
-  ./dist-updater "$subcommand" "$@"
+  exec ./dist-updater "$subcommand" "$@"
 else
-  sbcl --noinform --non-interactive \
+  exec sbcl --noinform --non-interactive \
     --eval '(progn (format *error-output* "~&Loading...~%") (ql:quickload :dist-updater/command :silent t))' \
-    --eval "(let ((sb-ext:*posix-argv* (list \"\" \"$subcommand\" \"$@\"))) (dist-updater/command:main))"
+    --eval "(dist-updater/command:main)" \
+    "$subcommand" "$@"
 fi
