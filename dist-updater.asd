@@ -1,6 +1,6 @@
 (defsystem "dist-updater"
   :class :package-inferred-system
-  :version "0.1.1"
+  :version "0.1.2"
   :depends-on ("dist-updater/main")
   :pathname "src"
   :in-order-to ((test-op (test-op "dist-updater-tests"))))
