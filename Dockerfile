@@ -1,4 +1,4 @@
-FROM clfoundation/sbcl
+FROM clfoundation/sbcl:slim
 
 WORKDIR /app
 
