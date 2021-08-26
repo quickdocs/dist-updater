@@ -14,6 +14,6 @@ esac
 if [ -f "./dist-updater" ]; then
   exec ./dist-updater "$subcommand" "$@"
 else
-  exec ros -S . ./roswell/dist-updater.ros \
+  exec ros ./roswell/dist-updater.ros \
     "$subcommand" "$@"
 fi
