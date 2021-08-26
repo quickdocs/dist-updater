@@ -14,8 +14,6 @@ esac
 if [ -f "./dist-updater" ]; then
   exec ./dist-updater "$subcommand" "$@"
 else
-  exec sbcl --noinform --non-interactive \
-    --eval '(progn (format *error-output* "~&Loading...~%") (ql:quickload :dist-updater/command :silent t))' \
-    --eval "(dist-updater/command:main)" \
+  exec ros -S . ./roswell/dist-updater.ros \
     "$subcommand" "$@"
 fi

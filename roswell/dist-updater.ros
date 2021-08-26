@@ -5,14 +5,16 @@ exec ros -Q -- $0 "$@"
 |#
 (progn ;;init forms
   (ros:ensure-asdf)
-  #+quicklisp(ql:quickload '(:dist-updater) :silent t)
-  )
+  #+quicklisp
+  (let ((*standard-output* (make-broadcast-stream))
+        (*error-output* (make-broadcast-stream)))
+    (ql:quickload '(:dist-updater/command) :silent t)))
 
 (defpackage :ros.script.dist-updater.3825248171
   (:use :cl))
 (in-package :ros.script.dist-updater.3825248171)
 
 (defun main (&rest argv)
-  (declare (ignorable argv))
-  (dist-updater/main:main))
+  (let ((sb-ext:*posix-argv* (cons nil argv)))
+    (dist-updater/command:main)))
 ;;; vim: set ft=lisp lisp:
