@@ -1,6 +1,6 @@
 FROM quickdocs/dist-updater-dev
 
 RUN set -x; \
-  sbcl --noinform --non-interactive --eval '(ql:quickload :rove)'
+  ros install rove
 
 ENTRYPOINT ["/app/test.sh"]
