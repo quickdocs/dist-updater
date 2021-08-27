@@ -1,7 +1,8 @@
 (defsystem "dist-updater"
   :class :package-inferred-system
   :version "0.1.3"
-  :depends-on ("dist-updater/main")
+  :depends-on ("dist-updater/main"
+               "dbd-postgres")
   :pathname "src"
   :in-order-to ((test-op (test-op "dist-updater-tests"))))
 
