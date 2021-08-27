@@ -5,7 +5,7 @@
   :pathname "src"
   :in-order-to ((test-op (test-op "dist-updater-tests"))))
 
-(defsystem "dist-updater/command"
+(defsystem "dist-updater/exectable"
   :depends-on ("dist-updater/command")
   :build-operation "program-op"
   :build-pathname "dist-updater"

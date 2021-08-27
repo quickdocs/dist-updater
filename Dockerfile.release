@@ -6,6 +6,6 @@ COPY . /app
 
 RUN set -x; \
   ros -S . -s dist-updater \
-    -e '(asdf:make :dist-updater/command)'
+    -e '(asdf:make :dist-updater/executable)'
 
 ENTRYPOINT ["/app/entrypoint.sh"]
