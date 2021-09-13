@@ -39,6 +39,7 @@
            #:system
            #:system-release
            #:system-name
+           #:system-primary-p
            #:system-long-name
            #:system-filename
            #:system-version
@@ -111,7 +112,8 @@
 (deftable system ()
   ((release :col-type release)
    (is-primary :col-type :boolean
-               :initform nil)
+               :initform nil
+               :accessor system-primary-p)
    (name :col-type (:varchar 64))
    (filename :col-type (or (:varchar 80) :null))
    (long-name :col-type (or :null :text))
