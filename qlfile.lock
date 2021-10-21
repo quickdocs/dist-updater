@@ -2,7 +2,3 @@
  (:class qlot/source/dist:source-dist
   :initargs (:distribution "http://beta.quicklisp.org/dist/quicklisp.txt" :%version :latest)
   :version "2021-10-21"))
-("esrap" .
- (:class qlot/source/ql:source-ql
-  :initargs (:%version "2021-08-07")
-  :version "ql-2021-08-07"))

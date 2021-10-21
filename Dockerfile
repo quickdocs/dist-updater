@@ -8,7 +8,7 @@ COPY qlfile.lock /app
 RUN set -x; \
   qlot install --no-deps
 
-FROM fukamachi/sbcl:2.1.8
+FROM fukamachi/sbcl:2.1.9
 
 WORKDIR /app
 COPY --from=0 /app/.qlot /app/.qlot
