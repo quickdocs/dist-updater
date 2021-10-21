@@ -1,4 +1,4 @@
-FROM fukamachi/sbcl
+FROM fukamachi/sbcl:2.1.8
 
 WORKDIR /app
 
