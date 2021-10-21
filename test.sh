@@ -8,4 +8,4 @@ export DB_NAME=quickdocs
 export DB_USERNAME=quickdocs
 export DB_PASSWORD=quickdocs
 
-rove dist-updater-tests.asd
+qlot exec rove dist-updater-tests.asd

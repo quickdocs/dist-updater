@@ -21,21 +21,21 @@ build_test: build
 
 .PHONY: update
 update:
-	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) \
+	docker run --rm -it -v ${PWD}:/app -v /app/.qlot --net=$(NETWORK) \
 		-e DB_HOST=$(DB_HOST) -e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) -e DB_USERNAME=$(DB_USERNAME) -e DB_PASSWORD=$(DB_PASSWORD) \
 		quickdocs/dist-updater-dev update $(version)
 
 .PHONY: fetch
 fetch:
-	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) \
+	docker run --rm -it -v ${PWD}:/app -v /app/.qlot --net=$(NETWORK) \
 		-e DB_HOST=$(DB_HOST) -e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) -e DB_USERNAME=$(DB_USERNAME) -e DB_PASSWORD=$(DB_PASSWORD) \
 		quickdocs/dist-updater-dev fetch $(resource)
 
 .PHONY: generate-migrations
 generate-migrations:
-	docker run --rm -it -v ${PWD}:/app --net=$(NETWORK) --entrypoint sbcl quickdocs/dist-updater-dev \
+	docker run --rm -it -v ${PWD}:/app -v /app/.qlot --net=$(NETWORK) --entrypoint sbcl quickdocs/dist-updater-dev \
 		--noinform --non-interactive \
 		--eval '(ql:quickload :dist-updater)' \
 		--eval '(mito:connect-toplevel :postgres :database-name "$(DB_NAME)" :host "$(DB_HOST)" :port $(DB_PORT) :username "$(DB_USERNAME)" :password "$(DB_PASSWORD)")' \
@@ -43,14 +43,14 @@ generate-migrations:
 
 .PHONY: migrate
 migrate:
-	docker run --rm -i -v ${PWD}:/app --net=$(NETWORK) \
+	docker run --rm -i -v ${PWD}:/app -v /app/.qlot --net=$(NETWORK) \
 		-e DB_HOST=$(DB_HOST) -e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) -e DB_USERNAME=$(DB_USERNAME) -e DB_PASSWORD=$(DB_PASSWORD) \
 		quickdocs/dist-updater-dev migrate
 
 .PHONY: test
 test: test_network testdb
-	docker run --rm -i --network quickdocs_dist_updater_test -v ${PWD}:/app quickdocs/dist-updater-test
+	docker run --rm -i --network quickdocs_dist_updater_test -v ${PWD}:/app -v /app/.qlot quickdocs/dist-updater-test
 	$(test_cleanup)
 
 .PHONY: testdb

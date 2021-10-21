@@ -1,6 +1,7 @@
 FROM quickdocs/dist-updater-dev
 
 RUN set -x; \
+  ros install fukamachi/qlot && \
   ros install rove
 
 ENTRYPOINT ["/app/test.sh"]
