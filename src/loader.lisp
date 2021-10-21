@@ -50,6 +50,28 @@
   (let ((dist-info (fetch-json "http://storage.googleapis.com/quickdocs-dist/quicklisp/info.json")))
     (gethash "latest_version" dist-info)))
 
+(defun delete-release (release)
+  (dolist (system (mito:select-dao 'system
+                    (where (:= :release release))))
+    (mapc #'mito:delete-dao
+          (mito:select-dao 'system-dependency
+            (where (:= :system system))))
+    (mito:delete-dao system))
+  (mito:delete-by-values 'readme-file :release release))
+
+(defun delete-dist (dist)
+  (dolist (release (mito:select-dao 'release
+                     (left-join :dist_release :on (:= :dist_release.release_id :release.id))
+                     (where (:= :dist_release.dist_id (mito:object-id dist)))))
+    (delete-release release)
+    (unless (mito:select-dao 'dist-release
+              (where (:and (:= :release_id (mito:object-id release))
+                           (:!= :dist_id (mito:object-id dist))))
+              (limit 1))
+      (mito:delete-dao release)))
+  (mito:delete-by-values 'dist-release :dist dist)
+  (mito:delete-dao dist))
+
 (defgeneric create-from-hash (class data &key)
   (:method :before (class data &key)
     (check-type data hash-table)))
@@ -120,7 +142,9 @@
                (release-systems-metadata-url release) systems-metadata-url
                (release-readme-url release) readme-url
                (release-upstream-url release) (gethash "upstream_url" data))
-         (mito:save-dao release))
+         (mito:save-dao release)
+         (when force
+           (delete-release release)))
         (t
          (setf release
                (mito:create-dao class
@@ -159,9 +183,10 @@
         (dolist (readme-file (gethash "readme_files" readme-data))
           (create-from-hash 'readme-file readme-file
                             :release release))))
-    (mito:create-dao 'dist-release
-                     :dist dist
-                     :release release)))
+    (unless (mito:find-dao 'dist-release :dist dist :release release)
+      (mito:create-dao 'dist-release
+                       :dist dist
+                       :release release))))
 
 (defmethod create-from-hash ((class (eql 'readme-file)) data &key release)
   (mito:create-dao class
@@ -235,25 +260,6 @@
                          :dist-name name
                          :dist-version dist-version)))))
     (create-from-hash 'dist data :force force)))
-
-(defun delete-dist (dist)
-  (dolist (release (mito:select-dao 'release
-                     (left-join :dist_release :on (:= :dist_release.release_id :release.id))
-                     (where (:= :dist_release.dist_id (mito:object-id dist)))))
-    (dolist (system (mito:select-dao 'system
-                      (where (:= :release release))))
-      (mapc #'mito:delete-dao
-            (mito:select-dao 'system-dependency
-              (where (:= :system system))))
-      (mito:delete-dao system))
-    (mito:delete-by-values 'readme-file :release release)
-    (unless (mito:select-dao 'dist-release
-              (where (:and (:= :release_id (mito:object-id release))
-                           (:!= :dist_id (mito:object-id dist))))
-              (limit 1))
-      (mito:delete-dao release)))
-  (mito:delete-by-values 'dist-release :dist dist)
-  (mito:delete-dao dist))
 
 (defun load-json (dist-version &key force)
   (check-type dist-version string)
