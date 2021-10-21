@@ -110,11 +110,10 @@
          (archive-url (gethash "archive_url" data))
          (systems-metadata-url (gethash "systems_metadata_url" data))
          (readme-url (gethash "readme_url" data))
-         (dist-version (dist-version dist))
          (release
            (mito:find-dao class
                           :dist-name (dist-name dist)
-                          :dist-version dist-version
+                          :archive-url archive-url
                           :name name))
          (label (and (null release)
                      (if (mito:find-dao class
@@ -129,7 +128,7 @@
       (cond
         (release
          (setf (release-dist-name release) (dist-name dist)
-               (release-dist-version release) dist-version
+               (release-dist-version release) (dist-version dist)
                (release-name release) name
                (release-archive-url release) archive-url
                (release-archive-size release) (gethash "archive_size" data)
@@ -145,7 +144,7 @@
          (setf release
                (mito:create-dao class
                                 :dist-name (dist-name dist)
-                                :dist-version dist-version
+                                :dist-version (dist-version dist)
                                 :name name
                                 :archive-url archive-url
                                 :archive-size (gethash "archive_size" data)
