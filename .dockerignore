@@ -7,5 +7,5 @@
 *~
 .#*
 
-db/data
-.qlot/
+.qlot/local-projects
+.qlot/dists/quicklisp
