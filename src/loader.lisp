@@ -110,11 +110,7 @@
          (archive-url (gethash "archive_url" data))
          (systems-metadata-url (gethash "systems_metadata_url" data))
          (readme-url (gethash "readme_url" data))
-         (dist-version
-           (nth-value 1
-                      (ppcre:scan-to-strings "^http://beta\.quicklisp\.org/archive/[^/]+/([^/]+)" archive-url)))
-         (dist-version (and dist-version
-                            (aref dist-version 0)))
+         (dist-version (dist-version dist))
          (release
            (mito:find-dao class
                           :dist-name (dist-name dist)
