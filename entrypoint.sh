@@ -10,10 +10,12 @@ case $1 in
     ;;
 esac
 
+export QUICKLISP_HOME=.qlot/
+
 # Use the binary if exists
 if [ -f "./dist-updater" ]; then
   exec ./dist-updater "$subcommand" "$@"
 else
-  exec ros -l .qlot/setup.lisp ./roswell/dist-updater.ros \
+  exec ros ./roswell/dist-updater.ros \
     "$subcommand" "$@"
 fi
