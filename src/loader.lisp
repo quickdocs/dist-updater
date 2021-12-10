@@ -31,6 +31,8 @@
                 #:limit)
   (:import-from #:dexador)
   (:import-from #:yason)
+  (:import-from #:cl-ppcre)
+  (:import-from #:local-time)
   (:export #:latest-dist-version
            #:load-json))
 (in-package #:dist-updater/loader)
@@ -100,6 +102,30 @@
                                  :progress progress
                                  :force force)))))
 
+(defvar *quicklisp-versions* nil)
+(defun quicklisp-versions ()
+  (or *quicklisp-versions*
+      (setf *quicklisp-versions*
+            (remove-if #'null
+                       (mapcar
+                         (lambda (line)
+                           (first (ppcre:split "\\s" line)))
+                         (ppcre:split "\\n"
+                                      (dex:get "http://beta.quicklisp.org/dist/quicklisp-versions.txt")))))))
+
+(defun archive-date-to-dist-version (archive-date)
+  (let ((versions (quicklisp-versions))
+        (archive-date-timestamp (local-time:parse-timestring archive-date)))
+    (or (find archive-date versions :test 'equal)
+        (first
+          (sort
+            versions
+            #'<
+            :key (lambda (val)
+                   (abs
+                     (local-time:timestamp-difference (local-time:parse-timestring val)
+                                                      archive-date-timestamp))))))))
+
 (defmethod create-from-hash ((class (eql 'release)) data &key dist progress force)
   (format t "~&[~D / ~D] ~A"
           progress
@@ -110,6 +136,14 @@
          (archive-url (gethash "archive_url" data))
          (systems-metadata-url (gethash "systems_metadata_url" data))
          (readme-url (gethash "readme_url" data))
+         (archive-date
+           (nth-value 1
+                      (ppcre:scan-to-strings "^http://beta\.quicklisp\.org/archive/[^/]+/([^/]+)" archive-url)))
+         (archive-date (and archive-date
+                            (aref archive-date 0)))
+         (dist-version (or (and archive-date
+                                (archive-date-to-dist-version archive-date))
+                           (error "Failed to determine the dist version by the archive URL: ~A" archive-url)))
          (release
            (mito:find-dao class
                           :dist-name (dist-name dist)
@@ -126,10 +160,9 @@
     (when (or (null release)
               force)
       (cond
-        ((and release
-              (equal (release-dist-version release) (dist-version dist)))
+        (release
          (setf (release-dist-name release) (dist-name dist)
-               (release-dist-version release) (dist-version dist)
+               (release-dist-version release) dist-version
                (release-name release) name
                (release-archive-url release) archive-url
                (release-archive-size release) (gethash "archive_size" data)
@@ -145,7 +178,7 @@
          (setf release
                (mito:create-dao class
                                 :dist-name (dist-name dist)
-                                :dist-version (dist-version dist)
+                                :dist-version dist-version
                                 :name name
                                 :archive-url archive-url
                                 :archive-size (gethash "archive_size" data)
