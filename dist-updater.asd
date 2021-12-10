@@ -1,6 +1,6 @@
 (defsystem "dist-updater"
   :class :package-inferred-system
-  :version "0.1.3"
+  :version "0.1.4"
   :depends-on ("dist-updater/main"
                "dbd-postgres")
   :pathname "src"
