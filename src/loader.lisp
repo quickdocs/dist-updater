@@ -126,7 +126,8 @@
     (when (or (null release)
               force)
       (cond
-        (release
+        ((and release
+              (equal (release-dist-version release) (dist-version dist)))
          (setf (release-dist-name release) (dist-name dist)
                (release-dist-version release) (dist-version dist)
                (release-name release) name
