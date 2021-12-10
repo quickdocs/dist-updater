@@ -119,7 +119,7 @@
     (or (find archive-date versions :test 'equal)
         (first
           (sort
-            versions
+            (copy-seq versions)
             #'<
             :key (lambda (val)
                    (abs
