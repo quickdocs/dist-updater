@@ -4,9 +4,10 @@
                 #:project-topic)
   (:import-from #:dist-updater/db
                 #:with-connection)
+  (:import-from #:dist-updater/http
+                #:fetch-json)
   (:import-from #:mito)
   (:import-from #:cl-dbi)
-  (:import-from #:dexador)
   (:import-from #:yason)
   (:export #:load-topics))
 (in-package #:dist-updater/external/topics)
@@ -15,12 +16,10 @@
   "https://storage.googleapis.com/quickdocs-resources/cliki/index.json")
 
 (defun topics-latest-info ()
-  (let ((body (dex:get *topics-index-url*)))
-    (yason:parse body)))
+  (fetch-json *topics-index-url*))
 
 (defun get-project-topics (url)
-  (let ((body (dex:get url)))
-    (yason:parse body)))
+  (fetch-json url))
 
 (defun load-topics ()
   (let* ((info (topics-latest-info))

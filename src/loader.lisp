@@ -23,6 +23,9 @@
                 #:system-dependency)
   (:import-from #:dist-updater/db
                 #:with-connection)
+  (:import-from #:dist-updater/http
+                #:fetch
+                #:fetch-json)
   (:import-from #:cl-dbi)
   (:import-from #:mito)
   (:import-from #:sxql
@@ -44,9 +47,6 @@
              (with-slots (dist-name dist-version) condition
                (format stream "Not supported dist version: ~A (version=~A)"
                        dist-name dist-version)))))
-
-(defun fetch-json (url)
-  (yason:parse (dex:get url)))
 
 (defun latest-dist-version ()
   (let ((dist-info (fetch-json "http://storage.googleapis.com/quickdocs-dist/quicklisp/info.json")))
@@ -111,7 +111,7 @@
                          (lambda (line)
                            (first (ppcre:split "\\s" line)))
                          (ppcre:split "\\n"
-                                      (dex:get "http://beta.quicklisp.org/dist/quicklisp-versions.txt")))))))
+                                      (fetch "http://beta.quicklisp.org/dist/quicklisp-versions.txt")))))))
 
 (defun archive-date-to-dist-version (archive-date)
   (let ((versions (quicklisp-versions))

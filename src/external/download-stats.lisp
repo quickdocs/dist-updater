@@ -4,12 +4,13 @@
                 #:project-download-stats)
   (:import-from #:dist-updater/db
                 #:with-connection)
+  (:import-from #:dist-updater/http
+                #:fetch)
   (:import-from #:cl-dbi)
   (:import-from #:sxql
                 #:delete-from
                 #:where)
   (:import-from #:mito)
-  (:import-from #:dexador)
   (:import-from #:split-sequence
                 #:split-sequence)
   (:export #:fetch-download-stats
@@ -41,9 +42,9 @@
 
 (defun fetch-download-stats (year month)
   (let* ((url (download-stats-url year month))
-         (body (dex:get url
-                        :want-stream t
-                        :use-connection-pool nil)))
+         (body (fetch url
+                      :want-stream t
+                      :use-connection-pool nil)))
     (read-all-lines body)))
 
 (defun delete-download-stats (year month)
